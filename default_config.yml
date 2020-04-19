@@ -1,0 +1,21 @@
+﻿
+bot:
+    # Bot token.
+    token: "<add-token-here>"
+    # Decides what messages are shown in console, possible values are: Critical, Error, Warning, Info, Debug.
+    console-log-level: "Info"
+    # A list of role ids that should be tracked
+    tracked-roles:
+      - 111111111111111111
+      - 222222222222222222
+      - 333333333333333333
+
+database:
+    # Address and port of the mysql server
+    address: "127.0.0.1"
+    port: 3306
+    # Name of the database to use
+    name: "discordbot"
+    # Username and password for authentication
+    user: ""
+    password: ""
