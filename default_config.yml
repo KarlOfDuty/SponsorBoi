@@ -1,21 +1,44 @@
-﻿
+﻿github:
+    # Github personal access token - https://github.com/settings/tokens - Requires user read permissions to fetch sponsors.
+    token: "<add-token-here>"
+    # Amount of time in minutes between each refresh, it is recommended to keep this above 5 minutes.
+    update-rate: "15"
+
 bot:
     # Bot token.
     token: "<add-token-here>"
+    # Command prefix.
+    prefix: "+"
     # Decides what messages are shown in console, possible values are: Critical, Error, Warning, Info, Debug.
     console-log-level: "Info"
-    # A list of role ids that should be tracked
-    tracked-roles:
-      - 111111111111111111
-      - 222222222222222222
-      - 333333333333333333
+    # A list of the dollar amount of the sponsorship tiers paired with corresponding role ids.
+    roles:
+        - "10": "111111111111111111"
+        - "5":  "222222222222222222"
+        - "1":  "333333333333333333"
+
+    # Set up which roles are allowed to use different commands.
+    # Example:
+    #   new: [ 000000000000000000, 111111111111111111 ]
+    # Do not give non-staff roles access to execute commands on other users
+    permissions:
+        # Saves a discord user's Github account in the database
+        sync: 
+            self: []
+            other: []
+        # Removes a user's synced Github account
+        unsync: 
+            self: []
+            other: []
+        # Reloads the bot config and reconnects to all services
+        reload: []
 
 database:
     # Address and port of the mysql server
     address: "127.0.0.1"
-    port: 3306
+    port: "3306"
     # Name of the database to use
-    name: "discordbot"
+    name: "sponsorboi"
     # Username and password for authentication
-    user: ""
-    password: ""
+    user: "username"
+    password: "password"

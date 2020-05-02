@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SponsorBoi": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)"
+    }
+  }
+}

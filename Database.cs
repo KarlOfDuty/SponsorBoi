@@ -2,110 +2,132 @@
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 
-namespace DiscordBot
+namespace SponsorBoi
 {
 	internal static class Database
 	{
 		private static string connectionString = "";
 
-		public class SavedRole
+		public struct SponsorEntry
 		{
-			public ulong userID;
-			public ulong roleID;
-			public DateTime time;
+			public ulong discordUser;
+			public string githubUser;
 
-			public SavedRole(MySqlDataReader reader)
+			public SponsorEntry(MySqlDataReader reader)
 			{
-				this.userID = reader.GetUInt64("user_id");
-				this.roleID = reader.GetUInt64("role_id");
-				this.time = reader.GetDateTime("time");
+				this.discordUser = reader.GetUInt64("discord_user");
+				this.githubUser = reader.GetString("github_user");
 			}
 		}
 
-		public static void SetConnectionString(string host, int port, string database, string username, string password)
+		public static void Initialize()
 		{
-			connectionString = "server=" + host +
-			                   ";database=" + database +
-			                   ";port=" + port +
-			                   ";userid=" + username +
-			                   ";password=" + password;
-		}
+			connectionString = "server="    + Config.hostName +
+			                   ";database=" + Config.database +
+			                   ";port="     + Config.port +
+			                   ";userid="   + Config.username +
+			                   ";password=" + Config.password;
 
-		public static MySqlConnection GetConnection()
-		{
-			return new MySqlConnection(connectionString);
-		}
-
-		public static void SetupTables()
-		{
 			using (MySqlConnection c = GetConnection())
 			{
 				MySqlCommand createTable = new MySqlCommand(
-					"CREATE TABLE IF NOT EXISTS tracked_roles(" +
-					"user_id BIGINT UNSIGNED NOT NULL," +
-					"role_id BIGINT UNSIGNED NOT NULL," +
-					"time DATETIME NOT NULL," +
-					"INDEX(user_id, time))",
+					"CREATE TABLE IF NOT EXISTS sponsors(" +
+					"discord_user BIGINT UNSIGNED NOT NULL UNIQUE," +
+					"github_user VARCHAR(256) NOT NULL UNIQUE)",
 					c);
 				c.Open();
 				createTable.ExecuteNonQuery();
+				createTable.Dispose();
 			}
 		}
 
-		public static bool TryAddRole(ulong userID, ulong roleID)
+		private static MySqlConnection GetConnection()
+		{
+			return new MySqlConnection(connectionString);
+		}
+		
+		public static bool TryAddSponsor(SponsorEntry sponsorEntry)
 		{
 			using (MySqlConnection c = GetConnection())
 			{
 				c.Open();
 
-				MySqlCommand cmd = new MySqlCommand(@"INSERT INTO tracked_roles (user_id, role_id, time) VALUES (@user_id, @role_id, now());", c);
-				cmd.Parameters.AddWithValue("@user_id", userID);
-				cmd.Parameters.AddWithValue("@role_id", roleID);
+				MySqlCommand cmd = new MySqlCommand(@"INSERT INTO sponsors (discord_user, github_user) VALUES (@discord_user, @github_user);", c);
+				cmd.Parameters.AddWithValue("@discord_user", sponsorEntry.discordUser);
+				cmd.Parameters.AddWithValue("@github_user", sponsorEntry.githubUser);
 				cmd.Prepare();
 
-				return cmd.ExecuteNonQuery() > 0;
-			}
+				int output = cmd.ExecuteNonQuery();
+				cmd.Dispose();
 
+				return output > 0;
+			}
 		}
 
-		public static bool TryGetRoles(ulong userID, out List<SavedRole> roles)
+		public static bool TryGetSponsor(string githubUser, out SponsorEntry sponsorEntry)
 		{
-			roles = null;
 			using (MySqlConnection c = GetConnection())
 			{
 				c.Open();
 
-				MySqlCommand selection = new MySqlCommand(@"SELECT * FROM tracked_roles WHERE user_id=@user_id", c);
-				selection.Parameters.AddWithValue("@user_id", userID);
+				MySqlCommand selection = new MySqlCommand(@"SELECT * FROM sponsors WHERE github_user=@github_user", c);
+				selection.Parameters.AddWithValue("@github_user", githubUser);
 				selection.Prepare();
 				MySqlDataReader results = selection.ExecuteReader();
+				selection.Dispose();
 
 				if (!results.Read())
 				{
+					sponsorEntry = new SponsorEntry();
+					results.Close();
 					return false;
 				}
 
-				roles = new List<SavedRole> { new SavedRole(results) };
-				while (results.Read())
-				{
-					roles.Add(new SavedRole(results));
-				}
+				sponsorEntry = new SponsorEntry(results);
 				results.Close();
 				return true;
 			}
 		}
 
-		public static bool TryRemoveRoles(ulong userID)
+		public static bool TryGetSponsor(ulong userID, out SponsorEntry sponsorEntry)
 		{
 			using (MySqlConnection c = GetConnection())
 			{
 				c.Open();
 
-				MySqlCommand deletion = new MySqlCommand(@"DELETE FROM tracked_roles WHERE user_id=@user_id", c);
-				deletion.Parameters.AddWithValue("@user_id", userID);
+				MySqlCommand selection = new MySqlCommand(@"SELECT * FROM sponsors WHERE discord_user=@discord_user", c);
+				selection.Parameters.AddWithValue("@discord_user", userID);
+				selection.Prepare();
+				MySqlDataReader results = selection.ExecuteReader();
+				selection.Dispose();
+
+				if (!results.Read())
+				{
+					sponsorEntry = new SponsorEntry();
+					results.Close();
+					return false;
+				}
+
+				sponsorEntry = new SponsorEntry(results);
+				results.Close();
+				return true;
+			}
+		}
+
+		public static bool TryRemoveSponsor(ulong userID)
+		{
+			using (MySqlConnection c = GetConnection())
+			{
+				c.Open();
+
+				MySqlCommand deletion = new MySqlCommand(@"DELETE FROM sponsors WHERE discord_user=@discord_user", c);
+				deletion.Parameters.AddWithValue("@discord_user", userID);
 				deletion.Prepare();
 
-				return deletion.ExecuteNonQuery() > 0;
+				int output = deletion.ExecuteNonQuery();
+				deletion.Dispose();
+
+				return output > 0;
 			}
 		}
 	}

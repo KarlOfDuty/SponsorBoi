@@ -4,17 +4,17 @@ using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
 
-namespace DiscordBot
-{
-	class BotTemplate
+namespace SponsorBoi
+{ 
+	static class SponsorBoi
 	{
-		internal static BotTemplate instance;
-		private DiscordClient discordClient = null;
-		private EventHandler eventHandler = null;
+		internal const string APPLICATION_NAME = "SponsorBoi";
+
+		private static DiscordClient discordClient = null;
 
 		static void Main(string[] args)
 		{
-			new BotTemplate().MainAsync().GetAwaiter().GetResult();
+			MainAsync().GetAwaiter().GetResult();
 		}
 
 		public static string GetVersion()
@@ -23,14 +23,14 @@ namespace DiscordBot
 			return version?.Major + "." + version?.Minor + "." + version?.Build + (version?.Revision == 0 ? "" : "-" + (char)(64 + version?.Revision ?? 0));
 		}
 
-		private async Task MainAsync()
+		private static async Task MainAsync()
 		{
-			instance = this;
-
-			Console.WriteLine("Starting Discord Bot version " + GetVersion() + "...");
+			Console.WriteLine("Starting " + APPLICATION_NAME + " version " + GetVersion() + "...");
 			try
 			{
-				this.Reload();
+				Reload();
+
+				await Github.GetSponsors();
 
 				// Block this task until the program is closed.
 				await Task.Delay(-1);
@@ -43,37 +43,61 @@ namespace DiscordBot
 			}
 		}
 
-		public async void Reload()
+		internal static void Info(string message)
 		{
-			if (this.discordClient != null)
+			discordClient.DebugLogger.LogMessage(LogLevel.Info, APPLICATION_NAME, message, DateTime.UtcNow);
+		}
+
+		internal static void Warning(string message)
+		{
+			discordClient.DebugLogger.LogMessage(LogLevel.Warning, APPLICATION_NAME, message, DateTime.UtcNow);
+		}
+
+		internal static void Debug(string message)
+		{
+			discordClient.DebugLogger.LogMessage(LogLevel.Debug, APPLICATION_NAME, message, DateTime.UtcNow);
+		}
+
+		internal static async void Reload()
+		{
+			if (discordClient != null)
 			{
-				await this.discordClient.DisconnectAsync();
-				this.discordClient.Dispose();
+				await discordClient.DisconnectAsync();
+				discordClient.Dispose();
 				Console.WriteLine("Discord client disconnected.");
 			}
 
 			Console.WriteLine("Loading config \"" + Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "config.yml\"");
 			Config.LoadConfig();
 
-			// Check if token is unset
-			if (Config.token == "<add-token-here>" || string.IsNullOrWhiteSpace(Config.token))
+			// Check if bot token is unset
+			if (Config.botToken == "<add-token-here>" || string.IsNullOrWhiteSpace(Config.botToken))
 			{
 				Console.WriteLine("You need to set your bot token in the config and start the bot again.");
 				throw new ArgumentException("Invalid Discord bot token");
+			}
+
+			// Check if github token is unset
+			if (Config.githubToken == "<add-token-here>" || string.IsNullOrWhiteSpace(Config.githubToken))
+			{
+				Console.WriteLine("You need to set your Github personal access token in the config and start the bot again.");
+				throw new ArgumentException("Invalid Github personal access token");
 			}
 
 			// Database connection and setup
 			try
 			{
 				Console.WriteLine("Connecting to database...");
-				Database.SetConnectionString(Config.hostName, Config.port, Config.database, Config.username, Config.password);
-				Database.SetupTables();
+				Database.Initialize();
 			}
 			catch (Exception e)
 			{
 				Console.WriteLine("Could not set up database tables, please confirm connection settings, status of the server and permissions of MySQL user. Error: " + e);
 				throw;
 			}
+
+			Console.WriteLine("Setting up Github API client...");
+			Github.Initialize();
 
 			Console.WriteLine("Setting up Discord client...");
 
@@ -87,7 +111,7 @@ namespace DiscordBot
 			// Setting up client configuration
 			DiscordConfiguration cfg = new DiscordConfiguration
 			{
-				Token = Config.token,
+				Token = Config.botToken,
 				TokenType = TokenType.Bot,
 
 				AutoReconnect = true,
@@ -95,13 +119,13 @@ namespace DiscordBot
 				UseInternalLogHandler = true
 			};
 
-			this.discordClient = new DiscordClient(cfg);
+			discordClient = new DiscordClient(cfg);
 
 			Console.WriteLine("Hooking events...");
-			this.eventHandler = new EventHandler(this.discordClient);
+			EventHandler.Initialize(discordClient);
 
 			Console.WriteLine("Connecting to Discord...");
-			await this.discordClient.ConnectAsync();
+			await discordClient.ConnectAsync();
 		}
 	}
 }

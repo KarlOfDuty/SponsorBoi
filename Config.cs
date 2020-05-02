@@ -1,26 +1,39 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using DSharpPlus.Entities;
 using Newtonsoft.Json.Linq;
-using DiscordBot.Properties;
+using SponsorBoi.Properties;
 using YamlDotNet.Serialization;
 
-namespace DiscordBot
+namespace SponsorBoi
 {
 	internal static class Config
 	{
-		internal const string APPLICATION_NAME = "DiscordBot";
+		internal static string githubToken = "";
+		internal static uint updateTime = 5;
 
-		internal static string token = "";
+		internal static string botToken = "";
+		internal static string prefix = "+";
 		internal static string logLevel = "Info";
+		internal static Dictionary<uint, ulong> tierRoles;
 
 		internal static string hostName = "127.0.0.1";
 		internal static int    port     = 3306;
-		internal static string database = "discordbot";
+		internal static string database = "sponsorboi";
 		internal static string username = "";
 		internal static string password = "";
 
-		internal static ulong[] trackedRoles = { };
+		private static readonly Dictionary<string, ulong[]> permissions = new Dictionary<string, ulong[]>
+		{
+			{ "sync.self",     Array.Empty<ulong>() },
+			{ "sync.other",    Array.Empty<ulong>() },
+			{ "unsync.self",   Array.Empty<ulong>() },
+			{ "unsync.other",  Array.Empty<ulong>() },
+			{ "reload",        Array.Empty<ulong>() }
+		};
 
 		public static void LoadConfig()
 		{
@@ -41,9 +54,13 @@ namespace DiscordBot
 			ISerializer serializer = new SerializerBuilder().JsonCompatible().Build();
 			JObject json = JObject.Parse(serializer.Serialize(yamlObject));
 
-			token = json.SelectToken("bot.token").Value<string>() ?? "";
+			githubToken = json.SelectToken("github.token").Value<string>() ?? "";
+			updateTime = json.SelectToken("github.update-rate").Value<uint>();
+
+			botToken = json.SelectToken("bot.token").Value<string>() ?? "";
 			logLevel = json.SelectToken("bot.console-log-level").Value<string>() ?? "";
-			trackedRoles = json.SelectToken("bot.tracked-roles").Value<JArray>().Values<ulong>().ToArray();
+			tierRoles = json.SelectToken("bot.roles").Value<JArray>().ToDictionary(k => ((JObject)k).Properties().First().Value<uint>(), v => v.Values().First().Value<ulong>());
+
 
 			// Reads database info
 			hostName = json.SelectToken("database.address").Value<string>() ?? "";
@@ -51,6 +68,28 @@ namespace DiscordBot
 			database = json.SelectToken("database.name").Value<string>() ?? "";
 			username = json.SelectToken("database.user").Value<string>() ?? "";
 			password = json.SelectToken("database.password").Value<string>() ?? "";
+
+			foreach ((string permissionName, ulong[] _) in permissions.ToList())
+			{
+				try
+				{
+					permissions[permissionName] = json.SelectToken("bot.permissions." + permissionName).Value<JArray>().Values<ulong>().ToArray();
+				}
+				catch (ArgumentNullException)
+				{
+					Console.WriteLine("Permission node '" + permissionName + "' was not found in the config, using default value: []");
+				}
+			}
+		}
+
+		public static bool HasPermission(DiscordMember member, string permission)
+		{
+			return member.Roles.Any(role => permissions[permission].Contains(role.Id)) || permissions[permission].Contains(member.Guild.Id);
+		}
+
+		public static bool TryGetTierRole(uint dollarAmount, out ulong roleID)
+		{
+			return tierRoles.TryGetValue(dollarAmount, out roleID);
 		}
 	}
 }
