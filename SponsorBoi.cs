@@ -3,14 +3,15 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
+using Microsoft.Extensions.Logging;
 
 namespace SponsorBoi
 { 
 	static class SponsorBoi
 	{
-		internal const string APPLICATION_NAME = "SponsorBoi";
+		public const string APPLICATION_NAME = "SponsorBoi";
 
-		private static DiscordClient discordClient = null;
+		public static DiscordClient discordClient = null;
 
 		static void Main(string[] args)
 		{
@@ -41,21 +42,6 @@ namespace SponsorBoi
 				Console.WriteLine(e);
 				Console.ReadLine();
 			}
-		}
-
-		internal static void Info(string message)
-		{
-			discordClient.DebugLogger.LogMessage(LogLevel.Info, APPLICATION_NAME, message, DateTime.UtcNow);
-		}
-
-		internal static void Warning(string message)
-		{
-			discordClient.DebugLogger.LogMessage(LogLevel.Warning, APPLICATION_NAME, message, DateTime.UtcNow);
-		}
-
-		internal static void Debug(string message)
-		{
-			discordClient.DebugLogger.LogMessage(LogLevel.Debug, APPLICATION_NAME, message, DateTime.UtcNow);
 		}
 
 		internal static async void Reload()
@@ -104,8 +90,8 @@ namespace SponsorBoi
 			// Checking log level
 			if (!Enum.TryParse(Config.logLevel, true, out LogLevel logLevel))
 			{
-				Console.WriteLine("Log level " + Config.logLevel + " invalid, using 'Info' instead.");
-				logLevel = LogLevel.Info;
+				Console.WriteLine("Log level " + Config.logLevel + " invalid, using 'Information' instead.");
+				logLevel = LogLevel.Information;
 			}
 
 			// Setting up client configuration
@@ -113,10 +99,9 @@ namespace SponsorBoi
 			{
 				Token = Config.botToken,
 				TokenType = TokenType.Bot,
-
+				MinimumLogLevel = logLevel,
 				AutoReconnect = true,
-				LogLevel = logLevel,
-				UseInternalLogHandler = true
+				Intents = DiscordIntents.All
 			};
 
 			discordClient = new DiscordClient(cfg);

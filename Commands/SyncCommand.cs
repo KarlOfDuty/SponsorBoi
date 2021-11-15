@@ -21,7 +21,7 @@ namespace SponsorBoi.Commands
 
 			// Put user in database, replace if duplicate discord id
 
-			ulong userID;
+			ulong userID = 0;
 			string[] parsedArgs = Utils.ParseIDs(command.RawArgumentString);
 
 			DiscordUser targetUser = await Utils.VerifyTargetUser(command, "sync", 1);
@@ -31,7 +31,6 @@ namespace SponsorBoi.Commands
 			{
 
 			}
-
 
 			// Outdated code below
 			DiscordMember member;
@@ -46,7 +45,7 @@ namespace SponsorBoi.Commands
 					Color = DiscordColor.Red,
 					Description = "Invalid ID/Mention. (Could not find user on this server)"
 				};
-				await command.RespondAsync("", false, error);
+				await command.RespondAsync(error);
 				return;
 			}
 
@@ -55,7 +54,7 @@ namespace SponsorBoi.Commands
 				Color = DiscordColor.Green,
 				Description = member.Mention + " was added to staff."
 			};
-			await command.RespondAsync("", false, message);
+			await command.RespondAsync(message);
 		}
 	}
 }

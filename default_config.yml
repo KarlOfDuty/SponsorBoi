@@ -9,13 +9,20 @@ bot:
     token: "<add-token-here>"
     # Command prefix.
     prefix: "+"
-    # Decides what messages are shown in console, possible values are: Critical, Error, Warning, Info, Debug.
-    console-log-level: "Info"
+    # Decides which messages are shown in console
+    # Possible values are: Critical, Error, Warning, Information, Debug.
+    console-log-level: "Information"
     # A list of the dollar amount of the sponsorship tiers paired with corresponding role ids.
     roles:
         - "10": "111111111111111111"
         - "5":  "222222222222222222"
         - "1":  "333333333333333333"
+
+    # Sets the type of activity for the bot to display in its presence status
+    # Possible values are: Playing, Streaming, ListeningTo, Watching, Competing
+    presence-type: "Watching"
+    # Sets the activity text shown in the bot's status
+    presence-text: "for new sponsors"
 
     # Set up which roles are allowed to use different commands.
     # Example:

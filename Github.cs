@@ -49,8 +49,8 @@ namespace SponsorBoi
 
 			public Sponsor(JToken sponsor)
 			{
-				this.username = sponsor.SelectToken("sponsor.login").Value<string>();
-				this.dollarAmount = sponsor.SelectToken("tier.monthlyPriceInDollars").Value<uint>();
+				username = sponsor.SelectToken("sponsor.login").Value<string>();
+				dollarAmount = sponsor.SelectToken("tier.monthlyPriceInDollars").Value<uint>();
 			}
 		}
 
@@ -66,8 +66,20 @@ namespace SponsorBoi
 			HttpResponseMessage result = await client.PostAsync(apiAdress, getSponsorsQuery);
 			string resultContent = await result.Content.ReadAsStringAsync();
 
-			List<JToken> sponsors = JObject.Parse(resultContent)
-				.SelectToken("data.viewer.sponsorshipsAsMaintainer.nodes").Values<JToken>().ToList();
+			JObject jo = JObject.Parse(resultContent);
+
+			string str = jo.ToString();
+
+			if (jo.TryGetValue("message", out JToken jt))
+			{
+				if (jt.Value<string>() == "Bad credentials")
+				{
+					Logger.Error(LogID.Github, "Github refused your personal access token");
+					return new List<Sponsor>();
+				}
+			}
+
+			List<JToken> sponsors = jo.SelectToken("data.viewer.sponsorshipsAsMaintainer.nodes").Value<JArray>().ToList();
 
 			List<Sponsor> output = new List<Sponsor>();
 			foreach (JToken sponsor in sponsors)

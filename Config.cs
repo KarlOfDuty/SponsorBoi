@@ -18,7 +18,9 @@ namespace SponsorBoi
 		internal static string botToken = "";
 		internal static string prefix = "+";
 		internal static string logLevel = "Info";
-		internal static Dictionary<uint, ulong> tierRoles;
+		internal static Dictionary<uint, ulong> tierRoles = new Dictionary<uint, ulong>();
+		internal static string presenceType = "Playing";
+		internal static string presenceText = "";
 
 		internal static string hostName = "127.0.0.1";
 		internal static int    port     = 3306;
@@ -58,8 +60,28 @@ namespace SponsorBoi
 			updateTime = json.SelectToken("github.update-rate").Value<uint>();
 
 			botToken = json.SelectToken("bot.token").Value<string>() ?? "";
+			prefix = json.SelectToken("bot.prefix").Value<string>() ?? "";
 			logLevel = json.SelectToken("bot.console-log-level").Value<string>() ?? "";
-			tierRoles = json.SelectToken("bot.roles").Value<JArray>().ToDictionary(k => ((JObject)k).Properties().First().Value<uint>(), v => v.Values().First().Value<ulong>());
+
+			foreach(JObject jo in json.SelectToken("bot.roles").Value<JArray>())
+			{
+				if (!uint.TryParse(jo.Properties().First().Name, out uint dollarAmount))
+				{
+					Logger.Warn(LogID.Config, "Could not parse dollar amount: '" + dollarAmount + "'");
+					continue;
+				}
+
+				if (!ulong.TryParse(jo.Values().First().Value<string>(), out ulong roleID))
+				{
+					Logger.Warn(LogID.Config, "Could not parse roleID: '" + roleID + "'");
+					continue;
+				}
+
+				tierRoles.Add(dollarAmount, roleID);
+			}
+
+			presenceType = json.SelectToken("bot.presence-type").Value<string>() ?? "";
+			presenceText = json.SelectToken("bot.presence-text").Value<string>() ?? "";
 
 
 			// Reads database info

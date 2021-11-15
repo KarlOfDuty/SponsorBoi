@@ -25,7 +25,7 @@ namespace SponsorBoi
 		}
 
 		/// <summary>
-		/// Gets the target of a command and checks if a user is allowed to use the command
+		/// Gets the target of a command and checks if a user is allowed to use the command depending on who the target is
 		/// </summary>
 		/// <param name="command">The command object.</param>
 		/// <param name="permission">The name of the permission</param>
@@ -55,8 +55,7 @@ namespace SponsorBoi
 					Color = DiscordColor.Red,
 					Description = "Invalid ID/Mention. (Could not convert to numerical)"
 				};
-				await command.RespondAsync("", false, error);
-				SponsorBoi.Debug(command.Member.Username + " tried to use the sync command but did not have permission.");
+				await command.RespondAsync(error);
 				return null;
 			}
 
@@ -68,8 +67,7 @@ namespace SponsorBoi
 					Color = DiscordColor.Red,
 					Description = "You do not have permission to use this command."
 				};
-				await command.RespondAsync("", false, noPerm);
-				SponsorBoi.Debug(command.Member.Username + " tried to use the sync command but did not have permission.");
+				await command.RespondAsync(noPerm);
 				return null;
 			}
 
@@ -79,7 +77,12 @@ namespace SponsorBoi
 			}
 			catch (NotFoundException)
 			{
-				SponsorBoi.Debug(command.Member.Username + " provided an invalid ID.");
+				DiscordEmbed error = new DiscordEmbedBuilder
+				{
+					Color = DiscordColor.Red,
+					Description = "Invalid ID/Mention. (Could not find target user)"
+				};
+				await command.RespondAsync(error);
 				return null;
 			}
 		}

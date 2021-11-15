@@ -21,33 +21,41 @@ namespace SponsorBoi
 			discordClient.GuildMemberAdded += OnGuildMemberAdded;
 		}
 
-		private static Task OnReady(ReadyEventArgs e)
+		private static Task OnReady(DiscordClient client, ReadyEventArgs e)
 		{
-			discordClient.DebugLogger.LogMessage(LogLevel.Info, SponsorBoi.APPLICATION_NAME, "Client is ready to process events.", DateTime.UtcNow);
-			discordClient.UpdateStatusAsync(new DiscordGame("Github Sponsors"), UserStatus.Online);
+			Logger.Log(LogID.Discord, "Client is ready to process events.");
+
+			// Checking activity type
+			if (!Enum.TryParse(Config.presenceType, true, out ActivityType activityType))
+			{
+				Console.WriteLine("Presence type '" + Config.presenceType + "' invalid, using 'Playing' instead.");
+				activityType = ActivityType.Playing;
+			}
+
+			discordClient.UpdateStatusAsync(new DiscordActivity(Config.presenceText, activityType), UserStatus.Online);
 			return Task.CompletedTask;
 		}
 
-		private static Task OnGuildAvailable(GuildCreateEventArgs e)
+		private static Task OnGuildAvailable(DiscordClient client, GuildCreateEventArgs e)
 		{
-			discordClient.DebugLogger.LogMessage(LogLevel.Info, SponsorBoi.APPLICATION_NAME, $"Guild available: {e.Guild.Name}", DateTime.UtcNow);
+			Logger.Log(LogID.Discord, "Guild available: " + e.Guild.Name);
 
-			IReadOnlyList<DiscordRole> roles = e.Guild.Roles;
+			IReadOnlyDictionary<ulong, DiscordRole> roles = e.Guild.Roles;
 
-			foreach (DiscordRole role in roles)
+			foreach ((ulong roleID, DiscordRole role) in roles)
 			{
-				discordClient.DebugLogger.LogMessage(LogLevel.Info, SponsorBoi.APPLICATION_NAME, role.Name.PadRight(40, '.') + role.Id, DateTime.UtcNow);
+				Logger.Log(LogID.Discord, role.Name.PadRight(40, '.') + roleID);
 			}
 			return Task.CompletedTask;
 		}
 
-		private static Task OnClientError(ClientErrorEventArgs e)
+		private static Task OnClientError(DiscordClient client, ClientErrorEventArgs e)
 		{
-			discordClient.DebugLogger.LogMessage(LogLevel.Error, SponsorBoi.APPLICATION_NAME, $"Exception occured: {e.Exception.GetType()}: {e.Exception}", DateTime.UtcNow);
+			Logger.Error(LogID.Discord, $"Exception occured: {e.Exception.GetType()}: {e.Exception}");
 			return Task.CompletedTask;
 		}
 
-		private static async Task OnGuildMemberAdded(GuildMemberAddEventArgs e)
+		private static async Task OnGuildMemberAdded(DiscordClient client, GuildMemberAddEventArgs e)
 		{
 			// Check if user has registered their Github account
 			if (!Database.TryGetSponsor(e.Member.Id, out Database.SponsorEntry sponsorEntry)) return;
@@ -62,7 +70,7 @@ namespace SponsorBoi
 
 			// Assign role
 			DiscordRole role = e.Guild.GetRole(roleID);
-			discordClient.DebugLogger.LogMessage(LogLevel.Info, SponsorBoi.APPLICATION_NAME, e.Member.DisplayName + " (" + e.Member.Id + ") were given back the role '" + role.Name + "' on rejoin. ", DateTime.UtcNow);
+			Logger.Log(LogID.Discord, e.Member.DisplayName + " (" + e.Member.Id + ") were given back the role '" + role.Name + "' on rejoin. ");
 			await e.Member.GrantRoleAsync(role);
 		}
 	}
