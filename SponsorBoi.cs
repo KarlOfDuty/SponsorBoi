@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -31,7 +32,8 @@ namespace SponsorBoi
 			{
 				Reload();
 
-				await Github.GetSponsors();
+				List<Github.Sponsor> sponsors = await Github.GetSponsors();
+				List<Github.Issue> issues = await Github.GetIssues();
 
 				// Block this task until the program is closed.
 				await Task.Delay(-1);

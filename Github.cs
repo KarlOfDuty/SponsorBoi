@@ -2,92 +2,111 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
+using Octokit.GraphQL;
+using Octokit.GraphQL.Model;
 
 namespace SponsorBoi
 {
 	internal static class Github
 	{
-		private static HttpClient client;
-
-		private static readonly Uri apiAdress = new Uri("https://api.github.com/graphql");
-
-		private static readonly string githubUserRegex = "/^[a-z\\d](?:[a-z\\d]|-(?=[a-z\\d])){0,38}$/i";
-
-		private static readonly StringContent getSponsorsQuery = new StringContent(Utils.Minify(
-	@"
-		{
-			""query"":""query
-			{ 
-				viewer
-				{ 
-					sponsorshipsAsMaintainer(first:100)
-					{
-						nodes
-						{
-							tier
-							{
-								monthlyPriceInDollars
-							}
-							sponsor
-							{
-								login
-							}
-						}
-					}
-				}
-			}""
-		}"));
-
 		public class Sponsor
 		{
 			public string username;
 			public uint dollarAmount;
-
-			public Sponsor(JToken sponsor)
-			{
-				username = sponsor.SelectToken("sponsor.login").Value<string>();
-				dollarAmount = sponsor.SelectToken("tier.monthlyPriceInDollars").Value<uint>();
-			}
 		}
+
+		public class Issue
+		{
+			public string title;
+			public string description;
+			public string author;
+		}
+
+		static List<Sponsor> sponsorCache = new List<Sponsor>();
+
+		static ICompiledQuery<IEnumerable<Sponsor>> sponsorQuery = new Query()
+			.Viewer
+			.SponsorshipsAsMaintainer()
+			.AllPages().Select(x => new Sponsor
+			{
+				username = x.Sponsor.Login,
+				dollarAmount = (uint)x.Tier.MonthlyPriceInDollars
+			})
+			.Compile();
+
+		static Octokit.GraphQL.ProductHeaderValue productInformation = new Octokit.GraphQL.ProductHeaderValue(SponsorBoi.APPLICATION_NAME, SponsorBoi.GetVersion());
+		static Octokit.GraphQL.Connection connection = null;
 
 		public static void Initialize()
 		{
-			client = new HttpClient();
-			client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config.githubToken);
-			client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(SponsorBoi.APPLICATION_NAME, SponsorBoi.GetVersion()));
+			connection = new Octokit.GraphQL.Connection(productInformation, Config.githubToken);
 		}
 
-		public static async Task<List<Sponsor>> GetSponsors()
+		public static async Task<List<Sponsor>> GetSponsors() // Needs 'read:user' permissions
 		{
-			HttpResponseMessage result = await client.PostAsync(apiAdress, getSponsorsQuery);
-			string resultContent = await result.Content.ReadAsStringAsync();
-
-			JObject jo = JObject.Parse(resultContent);
-
-			string str = jo.ToString();
-
-			if (jo.TryGetValue("message", out JToken jt))
+			try
 			{
-				if (jt.Value<string>() == "Bad credentials")
-				{
-					Logger.Error(LogID.Github, "Github refused your personal access token");
-					return new List<Sponsor>();
-				}
-			}
-
-			List<JToken> sponsors = jo.SelectToken("data.viewer.sponsorshipsAsMaintainer.nodes").Value<JArray>().ToList();
-
-			List<Sponsor> output = new List<Sponsor>();
-			foreach (JToken sponsor in sponsors)
+				return (await connection.Run(sponsorQuery)).ToList();
+			} 
+			catch (HttpRequestException e)
 			{
-				output.Add(new Sponsor(sponsor));
+				LogHTTPRequestException(e);
+				return new List<Sponsor>();
 			}
-
-			return output;
 		}
+
+		public static async Task<List<Issue>> GetIssues() // Needs 'read:user' permissions
+		{
+			try
+			{
+				ICompiledQuery<IEnumerable<Issue>> issueQuery = new Query()
+					.Viewer
+					.Repository("SponsorBoi")
+					.Issues(
+						first: 3,
+						after: null,
+						last: null,
+						before: null,
+						filterBy: null,
+						labels: null,
+						orderBy: new IssueOrder { Field = IssueOrderField.CreatedAt, Direction = OrderDirection.Desc },
+						states: null)
+					.Nodes
+					.Select(i => new Issue
+					{
+						title = i.Title,
+						description = i.BodyText,
+						author = i.Author.Login
+					})
+					.Compile();
+
+				return (await connection.Run(issueQuery)).ToList();
+			}
+			catch (HttpRequestException e)
+			{
+				LogHTTPRequestException(e);
+				return new List<Issue>();
+			}
+		}
+
+		private static void LogHTTPRequestException(HttpRequestException e)
+		{
+			switch (e.StatusCode)
+			{
+				case System.Net.HttpStatusCode.BadGateway:
+					Logger.Error(LogID.Github, "Could not connect to Github API (Bad Gateway)");
+					break;
+
+				case System.Net.HttpStatusCode.Unauthorized:
+				case System.Net.HttpStatusCode.Forbidden:
+					Logger.Error(LogID.Github, "Github refused request, make sure your personal access token is valid and has the right permissions.");
+					break;
+				default:
+					Logger.Error(LogID.Github, "Unknown error occured requesting from the Github API: " + e.Message);
+					break;
+			}
+		}
+
 	}
 }

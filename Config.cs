@@ -14,6 +14,9 @@ namespace SponsorBoi
 	{
 		internal static string githubToken = "";
 		internal static uint updateTime = 5;
+		internal static string syncRepositoryName = "";
+		internal static string issueTemplateURL = "";
+		internal static string issueSyncLabel = "";
 
 		internal static string botToken = "";
 		internal static string prefix = "+";
@@ -56,22 +59,25 @@ namespace SponsorBoi
 			ISerializer serializer = new SerializerBuilder().JsonCompatible().Build();
 			JObject json = JObject.Parse(serializer.Serialize(yamlObject));
 
-			githubToken = json.SelectToken("github.token").Value<string>() ?? "";
-			updateTime = json.SelectToken("github.update-rate").Value<uint>();
+			githubToken = json.SelectToken("github.token")?.Value<string>() ?? githubToken;
+			updateTime = json.SelectToken("github.update-rate")?.Value<uint>() ?? updateTime;
+			syncRepositoryName = json.SelectToken("github.sync.repository-name")?.Value<string>() ?? syncRepositoryName;
+			issueTemplateURL = json.SelectToken("github.sync.issue.template-url")?.Value<string>() ?? issueTemplateURL;
+			issueSyncLabel = json.SelectToken("github.sync.issue.sync-label")?.Value<string>() ?? issueSyncLabel;
 
-			botToken = json.SelectToken("bot.token").Value<string>() ?? "";
-			prefix = json.SelectToken("bot.prefix").Value<string>() ?? "";
-			logLevel = json.SelectToken("bot.console-log-level").Value<string>() ?? "";
+			botToken = json.SelectToken("bot.token")?.Value<string>() ?? botToken;
+			prefix = json.SelectToken("bot.prefix")?.Value<string>() ?? prefix;
+			logLevel = json.SelectToken("bot.console-log-level")?.Value<string>() ?? logLevel;
 
-			foreach(JObject jo in json.SelectToken("bot.roles").Value<JArray>())
+			foreach(JObject jo in json.SelectToken("bot.roles")?.Value<JArray>())
 			{
-				if (!uint.TryParse(jo.Properties().First().Name, out uint dollarAmount))
+				if (!uint.TryParse(jo.Properties()?.First()?.Name, out uint dollarAmount))
 				{
 					Logger.Warn(LogID.Config, "Could not parse dollar amount: '" + dollarAmount + "'");
 					continue;
 				}
 
-				if (!ulong.TryParse(jo.Values().First().Value<string>(), out ulong roleID))
+				if (!ulong.TryParse(jo.Values()?.First()?.Value<string>(), out ulong roleID))
 				{
 					Logger.Warn(LogID.Config, "Could not parse roleID: '" + roleID + "'");
 					continue;
@@ -80,16 +86,14 @@ namespace SponsorBoi
 				tierRoles.Add(dollarAmount, roleID);
 			}
 
-			presenceType = json.SelectToken("bot.presence-type").Value<string>() ?? "";
-			presenceText = json.SelectToken("bot.presence-text").Value<string>() ?? "";
+			presenceType = json.SelectToken("bot.presence-type")?.Value<string>() ?? presenceType;
+			presenceText = json.SelectToken("bot.presence-text")?.Value<string>() ?? presenceText;
 
-
-			// Reads database info
-			hostName = json.SelectToken("database.address").Value<string>() ?? "";
-			port = json.SelectToken("database.port").Value<int>();
-			database = json.SelectToken("database.name").Value<string>() ?? "";
-			username = json.SelectToken("database.user").Value<string>() ?? "";
-			password = json.SelectToken("database.password").Value<string>() ?? "";
+			hostName = json.SelectToken("database.address")?.Value<string>() ?? hostName;
+			port = json.SelectToken("database.port")?.Value<int>() ?? port;
+			database = json.SelectToken("database.name")?.Value<string>() ?? database;
+			username = json.SelectToken("database.user")?.Value<string>() ?? username;
+			password = json.SelectToken("database.password")?.Value<string>() ?? password;
 
 			foreach ((string permissionName, ulong[] _) in permissions.ToList())
 			{
