@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-1. Enter your Discord ID here:
+1. Enter your Discord ID here:  <!-- Example: 123456789123456789 -->
 
 2. Click create issue
 
