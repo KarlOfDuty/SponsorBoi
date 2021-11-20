@@ -9,7 +9,7 @@ assignees: ''
 
 1. Enter your Discord ID here:  <!-- Example: 123456789123456789 -->
 
-2. Click `Submit New Issue` below.
+2. Click `Submit new issue` below.
 
 3. Use the `+sponsor link` command in the Discord server.
 
