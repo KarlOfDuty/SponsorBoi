@@ -2,7 +2,7 @@
 name: Automated Discord link request
 about: Use this template to get your Github Sponsor role in the Discord server
 title: Automated Discord link request
-labels: ''
+labels: Automated Discord Sync
 assignees: ''
 
 ---
