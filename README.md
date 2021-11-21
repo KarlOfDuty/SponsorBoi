@@ -73,7 +73,7 @@ bot:
     presence-text: "for new sponsors"
 
     # Your Discord server's ID
-    server-id: 430468637183442945
+    server-id: 000000000000000000
 
     # Set up which roles are allowed to use different commands.
     # Example 1:
