@@ -10,13 +10,13 @@ namespace SponsorBoi
 
 		public struct SponsorEntry
 		{
-			public ulong discordUser;
-			public string githubUser;
+			public ulong discordID;
+			public string githubID;
 
 			public SponsorEntry(MySqlDataReader reader)
 			{
-				this.discordUser = reader.GetUInt64("discord_user");
-				this.githubUser = reader.GetString("github_user");
+				this.discordID = reader.GetUInt64("discord_id");
+				this.githubID = reader.GetString("github_id");
 			}
 		}
 
@@ -28,17 +28,14 @@ namespace SponsorBoi
 			                   ";userid="   + Config.username +
 			                   ";password=" + Config.password;
 
-			using (MySqlConnection c = GetConnection())
-			{
-				MySqlCommand createTable = new MySqlCommand(
-					"CREATE TABLE IF NOT EXISTS sponsors(" +
-					"discord_user BIGINT UNSIGNED NOT NULL UNIQUE," +
-					"github_user VARCHAR(256) NOT NULL UNIQUE)",
-					c);
-				c.Open();
-				createTable.ExecuteNonQuery();
-				createTable.Dispose();
-			}
+			using MySqlConnection c = GetConnection();
+			c.Open();
+			MySqlCommand createTable = new MySqlCommand(
+				"CREATE TABLE IF NOT EXISTS sponsors(" +
+				"discord_id BIGINT UNSIGNED NOT NULL UNIQUE," +
+				"github_id VARCHAR(256) NOT NULL UNIQUE)",
+				c);
+			createTable.ExecuteNonQuery();
 		}
 
 		private static MySqlConnection GetConnection()
@@ -48,87 +45,92 @@ namespace SponsorBoi
 		
 		public static bool TryAddSponsor(SponsorEntry sponsorEntry)
 		{
-			using (MySqlConnection c = GetConnection())
-			{
-				c.Open();
+			using MySqlConnection c = GetConnection();
+			c.Open();
 
-				MySqlCommand cmd = new MySqlCommand(@"INSERT INTO sponsors (discord_user, github_user) VALUES (@discord_user, @github_user);", c);
-				cmd.Parameters.AddWithValue("@discord_user", sponsorEntry.discordUser);
-				cmd.Parameters.AddWithValue("@github_user", sponsorEntry.githubUser);
-				cmd.Prepare();
+			MySqlCommand cmd = new MySqlCommand(@"INSERT INTO sponsors (discord_id, github_id) VALUES (@discord_id, @github_id);", c);
+			cmd.Parameters.AddWithValue("@discord_id", sponsorEntry.discordID);
+			cmd.Parameters.AddWithValue("@github_id", sponsorEntry.githubID);
 
-				int output = cmd.ExecuteNonQuery();
-				cmd.Dispose();
+			int output = cmd.ExecuteNonQuery();
 
-				return output > 0;
-			}
+			return output > 0;
 		}
 
-		public static bool TryGetSponsor(string githubUser, out SponsorEntry sponsorEntry)
+		public static List<SponsorEntry> GetAllSponsors()
 		{
-			using (MySqlConnection c = GetConnection())
+			using MySqlConnection c = GetConnection();
+			c.Open();
+
+			MySqlCommand selection = new MySqlCommand(@"SELECT * FROM sponsors", c);
+			MySqlDataReader results = selection.ExecuteReader();
+
+			List<SponsorEntry> sponsors = new List<SponsorEntry>();
+			while (results.Read())
 			{
-				c.Open();
-
-				MySqlCommand selection = new MySqlCommand(@"SELECT * FROM sponsors WHERE github_user=@github_user", c);
-				selection.Parameters.AddWithValue("@github_user", githubUser);
-				selection.Prepare();
-				MySqlDataReader results = selection.ExecuteReader();
-				selection.Dispose();
-
-				if (!results.Read())
-				{
-					sponsorEntry = new SponsorEntry();
-					results.Close();
-					return false;
-				}
-
-				sponsorEntry = new SponsorEntry(results);
-				results.Close();
-				return true;
+				sponsors.Add(new SponsorEntry(results));
 			}
+
+			results.Close();
+			return sponsors;
 		}
 
-		public static bool TryGetSponsor(ulong userID, out SponsorEntry sponsorEntry)
+		public static bool TryGetSponsor(string githubID, out SponsorEntry sponsorEntry)
 		{
-			using (MySqlConnection c = GetConnection())
+			using MySqlConnection c = GetConnection();
+			c.Open();
+
+			MySqlCommand selection = new MySqlCommand(@"SELECT * FROM sponsors WHERE github_id=@github_id", c);
+			selection.Parameters.AddWithValue("@github_id", githubID);
+			selection.Prepare();
+			MySqlDataReader results = selection.ExecuteReader();
+
+			if (!results.Read())
 			{
-				c.Open();
-
-				MySqlCommand selection = new MySqlCommand(@"SELECT * FROM sponsors WHERE discord_user=@discord_user", c);
-				selection.Parameters.AddWithValue("@discord_user", userID);
-				selection.Prepare();
-				MySqlDataReader results = selection.ExecuteReader();
-				selection.Dispose();
-
-				if (!results.Read())
-				{
-					sponsorEntry = new SponsorEntry();
-					results.Close();
-					return false;
-				}
-
-				sponsorEntry = new SponsorEntry(results);
+				sponsorEntry = new SponsorEntry();
 				results.Close();
-				return true;
+				return false;
 			}
+
+			sponsorEntry = new SponsorEntry(results);
+			results.Close();
+			return true;
+		}
+
+		public static bool TryGetSponsor(ulong discordID, out SponsorEntry sponsorEntry)
+		{
+			using MySqlConnection c = GetConnection();
+			c.Open();
+
+			MySqlCommand selection = new MySqlCommand(@"SELECT * FROM sponsors WHERE discord_id=@discord_id", c);
+			selection.Parameters.AddWithValue("@discord_id", discordID);
+			selection.Prepare();
+			MySqlDataReader results = selection.ExecuteReader();
+
+			if (!results.Read())
+			{
+				sponsorEntry = new SponsorEntry();
+				results.Close();
+				return false;
+			}
+
+			sponsorEntry = new SponsorEntry(results);
+			results.Close();
+			return true;
 		}
 
 		public static bool TryRemoveSponsor(ulong userID)
 		{
-			using (MySqlConnection c = GetConnection())
-			{
-				c.Open();
+			using MySqlConnection c = GetConnection();
+			c.Open();
 
-				MySqlCommand deletion = new MySqlCommand(@"DELETE FROM sponsors WHERE discord_user=@discord_user", c);
-				deletion.Parameters.AddWithValue("@discord_user", userID);
-				deletion.Prepare();
+			MySqlCommand deletion = new MySqlCommand(@"DELETE FROM sponsors WHERE discord_id=@discord_id", c);
+			deletion.Parameters.AddWithValue("@discord_id", userID);
+			deletion.Prepare();
 
-				int output = deletion.ExecuteNonQuery();
-				deletion.Dispose();
+			int output = deletion.ExecuteNonQuery();
 
-				return output > 0;
-			}
+			return output > 0;
 		}
 	}
 }

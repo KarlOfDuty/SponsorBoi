@@ -13,17 +13,18 @@ namespace SponsorBoi
 	internal static class Config
 	{
 		internal static string githubToken = "";
-		internal static uint updateTime = 5;
-		internal static string syncRepositoryName = "";
-		internal static string issueTemplateURL = "";
-		internal static string issueSyncLabel = "";
+		internal static string repositoryName = "";
+		internal static string issueURL = "<url missing in config>";
+		internal static int sponsorCacheTimeout = 15;
+		internal static int autoPruneTime = 120;
 
 		internal static string botToken = "";
 		internal static string prefix = "+";
 		internal static string logLevel = "Info";
-		internal static Dictionary<uint, ulong> tierRoles = new Dictionary<uint, ulong>();
+		internal static Dictionary<int, ulong> tierRoles = new Dictionary<int, ulong>();
 		internal static string presenceType = "Playing";
 		internal static string presenceText = "";
+		internal static ulong serverID = 0;
 
 		internal static string hostName = "127.0.0.1";
 		internal static int    port     = 3306;
@@ -33,11 +34,11 @@ namespace SponsorBoi
 
 		private static readonly Dictionary<string, ulong[]> permissions = new Dictionary<string, ulong[]>
 		{
-			{ "sync.self",     Array.Empty<ulong>() },
-			{ "sync.other",    Array.Empty<ulong>() },
-			{ "unsync.self",   Array.Empty<ulong>() },
-			{ "unsync.other",  Array.Empty<ulong>() },
-			{ "reload",        Array.Empty<ulong>() }
+			{ "link.self",     Array.Empty<ulong>() },
+			{ "link.other",    Array.Empty<ulong>() },
+			{ "unlink.self",   Array.Empty<ulong>() },
+			{ "unlink.other",  Array.Empty<ulong>() },
+			{ "recheck",       Array.Empty<ulong>() }
 		};
 
 		public static void LoadConfig()
@@ -60,10 +61,14 @@ namespace SponsorBoi
 			JObject json = JObject.Parse(serializer.Serialize(yamlObject));
 
 			githubToken = json.SelectToken("github.token")?.Value<string>() ?? githubToken;
-			updateTime = json.SelectToken("github.update-rate")?.Value<uint>() ?? updateTime;
-			syncRepositoryName = json.SelectToken("github.sync.repository-name")?.Value<string>() ?? syncRepositoryName;
-			issueTemplateURL = json.SelectToken("github.sync.issue.template-url")?.Value<string>() ?? issueTemplateURL;
-			issueSyncLabel = json.SelectToken("github.sync.issue.sync-label")?.Value<string>() ?? issueSyncLabel;
+			sponsorCacheTimeout = json.SelectToken("github.sponsor-cache-time")?.Value<int>() ?? sponsorCacheTimeout;
+			autoPruneTime = json.SelectToken("github.auto-prune-time")?.Value<int>() ?? autoPruneTime;
+			repositoryName = json.SelectToken("github.sync.repository-name")?.Value<string>() ?? repositoryName;
+			issueURL = json.SelectToken("github.sync.issue-url")?.Value<string>() ?? issueURL;
+			if (string.IsNullOrWhiteSpace(issueURL))
+			{
+				Logger.Warn(LogID.Config, "Issue URL was not set in your config, some messages will not show correctly!");
+			}
 
 			botToken = json.SelectToken("bot.token")?.Value<string>() ?? botToken;
 			prefix = json.SelectToken("bot.prefix")?.Value<string>() ?? prefix;
@@ -71,7 +76,7 @@ namespace SponsorBoi
 
 			foreach(JObject jo in json.SelectToken("bot.roles")?.Value<JArray>())
 			{
-				if (!uint.TryParse(jo.Properties()?.First()?.Name, out uint dollarAmount))
+				if (!int.TryParse(jo.Properties()?.First()?.Name, out int dollarAmount))
 				{
 					Logger.Warn(LogID.Config, "Could not parse dollar amount: '" + dollarAmount + "'");
 					continue;
@@ -88,6 +93,7 @@ namespace SponsorBoi
 
 			presenceType = json.SelectToken("bot.presence-type")?.Value<string>() ?? presenceType;
 			presenceText = json.SelectToken("bot.presence-text")?.Value<string>() ?? presenceText;
+			serverID = json.SelectToken("bot.server-id")?.Value<ulong>() ?? serverID;
 
 			hostName = json.SelectToken("database.address")?.Value<string>() ?? hostName;
 			port = json.SelectToken("database.port")?.Value<int>() ?? port;
@@ -103,7 +109,7 @@ namespace SponsorBoi
 				}
 				catch (ArgumentNullException)
 				{
-					Console.WriteLine("Permission node '" + permissionName + "' was not found in the config, using default value: []");
+					Logger.Warn(LogID.Config, "Permission node '" + permissionName + "' was not found in the config, using default value: []");
 				}
 			}
 		}
@@ -113,7 +119,7 @@ namespace SponsorBoi
 			return member.Roles.Any(role => permissions[permission].Contains(role.Id)) || permissions[permission].Contains(member.Guild.Id);
 		}
 
-		public static bool TryGetTierRole(uint dollarAmount, out ulong roleID)
+		public static bool TryGetTierRole(int dollarAmount, out ulong roleID)
 		{
 			return tierRoles.TryGetValue(dollarAmount, out roleID);
 		}

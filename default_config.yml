@@ -1,51 +1,75 @@
 ﻿github:
-    # Github personal access token - https://github.com/settings/tokens - Requires user read permissions to fetch sponsors.
+    # Github personal access token - https://github.com/settings/tokens - Requires 'read:org' permission (and maybe 'read:user'?) to fetch sponsors.
     token: "<add-token-here>"
-    # Amount of time in minutes between each refresh, it is recommended to keep this above 5 minutes.
-    update-rate: "15"
+
+    # Minimum amount of time in minutes between refreshing sponsor list from the API.
+    sponsor-cache-time: 15
+
+    # Amount of time in minutes between re-checking users with registered roles, recommended to keep very high. Set to 0 to disable alltogether.
+    auto-prune-time: 360
+
+    sync:
+        # The name of the repository to check for verification requests, must be owned by the same user as the token above.
+        repository-name: "MyRepo"
+
+        # The user is shown this url when they run the sync command.
+        # It is recommended that you set up an issue template with instructions for the user and link directly to it here.
+        # You can enable issue templates in your repository settings under 'Options->Issues->Set up Templates'.
+        issue-url: "https://github.com/MyUsername/MyRepo/issues/new/choose"
 
 bot:
     # Bot token.
     token: "<add-token-here>"
+
     # Command prefix.
     prefix: "+"
-    # Decides which messages are shown in console
+
+    # Decides which messages are shown in console.
     # Possible values are: Critical, Error, Warning, Information, Debug.
     console-log-level: "Information"
+
     # A list of the dollar amount of the sponsorship tiers paired with corresponding role ids.
     roles:
         - "10": "111111111111111111"
         - "5":  "222222222222222222"
         - "1":  "333333333333333333"
 
-    # Sets the type of activity for the bot to display in its presence status
-    # Possible values are: Playing, Streaming, ListeningTo, Watching, Competing
+    # Sets the type of activity for the bot to display in its presence status.
+    # Possible values are: Playing, Streaming, ListeningTo, Watching, Competing.
     presence-type: "Watching"
+
     # Sets the activity text shown in the bot's status
     presence-text: "for new sponsors"
 
+    # Your Discord server's ID
+    server-id: 000000000000000000
+
     # Set up which roles are allowed to use different commands.
-    # Example:
-    #   new: [ 000000000000000000, 111111111111111111 ]
-    # Do not give non-staff roles access to execute commands on other users
+    # Example 1:
+    #   self: [ 000000000000000000, 111111111111111111 ]
+    # Example 2:
+    #   self:
+    #     - 000000000000000000
+    #     - 111111111111111111
+    # Do not give non-staff roles access to execute commands on other users.
     permissions:
-        # Saves a discord user's Github account in the database
+        # Saves a discord user's Github account in the database.
         sync: 
             self: []
             other: []
-        # Removes a user's synced Github account
+        # Removes a user's synced Github account.
         unsync: 
             self: []
             other: []
-        # Reloads the bot config and reconnects to all services
-        reload: []
+        # Manually rechecks a user's sponsor status
+        recheck: []
 
 database:
-    # Address and port of the mysql server
+    # Address and port of the mysql server.
     address: "127.0.0.1"
     port: "3306"
-    # Name of the database to use
+    # Name of the database to use.
     name: "sponsorboi"
-    # Username and password for authentication
+    # Username and password for authentication.
     user: "username"
     password: "password"
