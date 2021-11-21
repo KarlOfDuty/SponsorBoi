@@ -64,19 +64,7 @@ namespace SponsorBoi.Commands
 				return;
 			}
 
-			foreach (ulong removeRoleID in Config.tierRoles.Values)
-			{
-				try
-				{
-					DiscordRole roleToRemove = command.Guild.GetRole(removeRoleID);
-					Logger.Log(LogID.Discord, "Revoking role '" + roleToRemove.Name + "' from " + Utils.FullName(member));
-					await member.RevokeRoleAsync(roleToRemove);
-				}
-				catch (Exception e)
-				{
-					Logger.Log(LogID.Discord, "Error removing role <@" + removeRoleID + "> from user " + Utils.FullName(member) + ":\n" + e);
-				}
-			}
+			await RoleChecker.SyncRoles(member, 0);
 		}
 	}
 }

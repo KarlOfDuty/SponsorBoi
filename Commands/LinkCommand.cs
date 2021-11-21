@@ -113,63 +113,7 @@ namespace SponsorBoi.Commands
 			int dollarAmount = sponsors.FirstOrDefault(x => x.sponsor.id == githubAccount.id).dollarAmount;
 			ulong sponsorTierRoleID = Config.tierRoles.GetValueOrDefault(dollarAmount);
 
-			List<ulong> forbiddenRoles = Config.tierRoles.Values.ToList();
-			forbiddenRoles.RemoveAll(x => x == sponsorTierRoleID);
-
-			// Give them the appropriate role if they don't have it
-			List<ulong> existingRoles = targetMember.Roles.Select(x => x.Id).ToList();
-			if (!existingRoles.Contains(sponsorTierRoleID) && sponsorTierRoleID != 0)
-			{
-				try
-				{
-					DiscordRole roleToGive = command.Guild.GetRole(sponsorTierRoleID);
-					Logger.Log(LogID.Discord, "Giving role '" + roleToGive.Name + "' to " + Utils.FullName(targetMember));
-					await targetMember.GrantRoleAsync(roleToGive);
-
-					await command.RespondAsync(new DiscordEmbedBuilder
-					{
-						Color = DiscordColor.Green,
-						Description = "Role '" + roleToGive.Name + "' granted to <@" + targetMember.Id + ">!"
-					});
-				}
-				catch (Exception e)
-				{
-					await command.RespondAsync(new DiscordEmbedBuilder
-					{
-						Color = DiscordColor.Red,
-						Description = "Error giving role <@" + sponsorTierRoleID + "> to user <@" + targetMember.Id + ">!"
-					});
-					Logger.Log(LogID.Discord, "Error giving role <@" + sponsorTierRoleID + "> to user " + Utils.FullName(targetMember) + ":\n" + e);
-				}
-			}
-
-			// Remove all inappropriate roles they have
-			List<ulong> rolesToRemove = forbiddenRoles.Where(x => existingRoles.Contains(x)).ToList();
-			foreach (ulong removeRoleID in rolesToRemove)
-			{
-				try
-				{
-					DiscordRole roleToRemove = command.Guild.GetRole(removeRoleID);
-					Logger.Log(LogID.Discord, "Revoking role '" + roleToRemove.Name + "' from " + Utils.FullName(targetMember));
-					await targetMember.RevokeRoleAsync(roleToRemove);
-
-					await command.RespondAsync(new DiscordEmbedBuilder
-					{
-						Color = DiscordColor.Red,
-						Description = "Role '" + roleToRemove.Name + "' removed from <@" + targetMember.Id + ">!"
-					});
-					await Task.Delay(1000);
-				}
-				catch (Exception e)
-				{
-					await command.RespondAsync(new DiscordEmbedBuilder
-					{
-						Color = DiscordColor.Red,
-						Description = "Error removing role <@" + removeRoleID + "> from user <@" + targetMember.Id + ">!"
-					});
-					Logger.Log(LogID.Discord, "Error removing role <@" + removeRoleID + "> from user " + Utils.FullName(targetMember) + ":\n" + e);
-				}
-			}
+			await RoleChecker.SyncRoles(targetMember, sponsorTierRoleID);
 		}
 	}
 }

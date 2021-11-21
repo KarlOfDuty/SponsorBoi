@@ -119,7 +119,7 @@ namespace SponsorBoi
 			Logger.Log(LogID.General, "Connecting to Discord...");
 			await discordClient.ConnectAsync();
 
-			PeriodicRechecker.RunPeriodically();
+			RoleChecker.RunPeriodically();
 		}
 	}
 }

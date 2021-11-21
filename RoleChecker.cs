@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SponsorBoi
 {
-	public static class PeriodicRechecker
+	public static class RoleChecker
 	{
 		public static DiscordClient client = null;
 		public static void RunPeriodically()
@@ -22,7 +22,7 @@ namespace SponsorBoi
 					try
 					{
 						Logger.Log(LogID.Discord, "Started periodic check of sponsors...");
-						await CheckSponsors();
+						await RunSponsorCheck();
 						Logger.Log(LogID.Discord, "Periodic sponsor check finished.");
 					}
 					catch (Exception e)
@@ -34,14 +34,7 @@ namespace SponsorBoi
 			});
 		}
 
-		public static async Task RunManually()
-		{
-			Logger.Log(LogID.Discord, "Started manual check of sponsors...");
-			await CheckSponsors();
-			Logger.Log(LogID.Discord, "Manual sponsor check finished.");
-		}
-
-		private static async Task CheckSponsors()
+		public static async Task RunSponsorCheck()
 		{
 			DiscordGuild guild;
 			try
@@ -80,42 +73,45 @@ namespace SponsorBoi
 					sponsorTierRoleID  = Config.tierRoles.GetValueOrDefault(sponsor.dollarAmount);
 				}
 
-				// Give them the appropriate role if they don't have it
-				List<ulong> existingRoles = member.Roles.Select(x => x.Id).ToList();
-				if (!existingRoles.Contains(sponsorTierRoleID) && sponsorTierRoleID != 0)
-				{
-					try
-					{
-						DiscordRole roleToGive = guild.GetRole(sponsorTierRoleID);
-						Logger.Log(LogID.Discord, "Giving role '" + roleToGive.Name + "' to " + Utils.FullName(member));
-						await member.GrantRoleAsync(roleToGive);
-						await Task.Delay(1000);
-					}
-					catch (Exception e)
-					{
-						Logger.Error(LogID.Discord, "Error giving role " + sponsorTierRoleID + " to user " + Utils.FullName(member) + ":\n" + e);
-					}
-				}
+				await SyncRoles(member, sponsorTierRoleID);
+			}
+		}
 
-				// Remove all inappropriate roles they have
-				List<ulong> forbiddenRoles = Config.tierRoles.Values.ToList();
-				forbiddenRoles.RemoveAll(x => x == sponsorTierRoleID);
-				List<ulong> rolesToRemove = forbiddenRoles.Where(x => existingRoles.Contains(x)).ToList();
-				foreach (ulong removeRoleID in rolesToRemove)
+		public static async Task SyncRoles(DiscordMember member, ulong sponsorTierRoleID)
+		{
+			// Give them the appropriate role if they don't have it
+			List<ulong> existingRoles = member.Roles.Select(x => x.Id).ToList();
+			if (!existingRoles.Contains(sponsorTierRoleID) && sponsorTierRoleID != 0)
+			{
+				try
 				{
-					try
-					{
-						DiscordRole roleToRemove = guild.GetRole(removeRoleID);
-						Logger.Log(LogID.Discord, "Revoking role '" + roleToRemove.Name + "' from " + Utils.FullName(member));
-						await member.RevokeRoleAsync(roleToRemove);
-						await Task.Delay(1000);
-					}
-					catch (Exception e)
-					{
-						Logger.Error(LogID.Discord, "Error removing role " + removeRoleID + " from user " + Utils.FullName(member) + ":\n" + e);
-					}
+					DiscordRole roleToGive = member.Guild.GetRole(sponsorTierRoleID);
+					Logger.Log(LogID.Discord, "Giving role '" + roleToGive.Name + "' to " + Utils.FullName(member));
+					await member.GrantRoleAsync(roleToGive);
 				}
-				
+				catch (Exception e)
+				{
+					Logger.Log(LogID.Discord, "Error giving role <@" + sponsorTierRoleID + "> to user " + Utils.FullName(member) + ":\n" + e);
+				}
+			}
+
+			// Remove all inappropriate roles they have
+			List<ulong> forbiddenRoles = Config.tierRoles.Values.ToList();
+			forbiddenRoles.RemoveAll(x => x == sponsorTierRoleID);
+			List<ulong> rolesToRemove = forbiddenRoles.Where(x => existingRoles.Contains(x)).ToList();
+			foreach (ulong removeRoleID in rolesToRemove)
+			{
+				try
+				{
+					DiscordRole roleToRemove = member.Guild.GetRole(removeRoleID);
+					Logger.Log(LogID.Discord, "Revoking role '" + roleToRemove.Name + "' from " + Utils.FullName(member));
+					await member.RevokeRoleAsync(roleToRemove);
+					await Task.Delay(1000);
+				}
+				catch (Exception e)
+				{
+					Logger.Log(LogID.Discord, "Error removing role <@" + removeRoleID + "> from user " + Utils.FullName(member) + ":\n" + e);
+				}
 			}
 		}
 	}
