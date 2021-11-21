@@ -2,7 +2,7 @@ github:
     # Github personal access token - https://github.com/settings/tokens - Requires 'read:org' permission (and maybe 'read:user'?) to fetch sponsors.
     token: "<add-token-here>"
 
-    # Amount of time in minutes between re-checking users with registered roles, recommended to keep high. Set to 0 to disable alltogether.
+    # Amount of time in minutes between re-checking users with registered roles, recommended to keep high.
     auto-prune-time: 120
 
     sync:
