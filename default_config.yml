@@ -1,4 +1,4 @@
-﻿github:
+github:
     # Github personal access token - https://github.com/settings/tokens - Requires 'read:org' permission (and maybe 'read:user'?) to fetch sponsors.
     token: "<add-token-here>"
 
