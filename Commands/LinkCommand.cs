@@ -110,8 +110,13 @@ namespace SponsorBoi.Commands
 			await command.RespondAsync(message);
 
 			List<Github.Sponsor> sponsors = await Github.GetSponsors();
-			int dollarAmount = sponsors.FirstOrDefault(x => x.sponsor.id == githubAccount.id).dollarAmount;
-			ulong sponsorTierRoleID = Config.tierRoles.GetValueOrDefault(dollarAmount);
+			ulong sponsorTierRoleID = 0;
+
+			Github.Sponsor sponsor = sponsors.FirstOrDefault(x => x.sponsor.id == githubAccount.id);
+			if (sponsor != null)
+			{
+				sponsorTierRoleID = Config.tierRoles.GetValueOrDefault(sponsor.dollarAmount);
+			}
 
 			await RoleChecker.SyncRoles(targetMember, sponsorTierRoleID);
 		}
