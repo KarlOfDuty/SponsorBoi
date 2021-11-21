@@ -15,7 +15,6 @@ namespace SponsorBoi
 		internal static string githubToken = "";
 		internal static string repositoryName = "";
 		internal static string issueURL = "<url missing in config>";
-		internal static int sponsorCacheTimeout = 15;
 		internal static int autoPruneTime = 120;
 
 		internal static string botToken = "";
@@ -61,7 +60,6 @@ namespace SponsorBoi
 			JObject json = JObject.Parse(serializer.Serialize(yamlObject));
 
 			githubToken = json.SelectToken("github.token")?.Value<string>() ?? githubToken;
-			sponsorCacheTimeout = json.SelectToken("github.sponsor-cache-time")?.Value<int>() ?? sponsorCacheTimeout;
 			autoPruneTime = json.SelectToken("github.auto-prune-time")?.Value<int>() ?? autoPruneTime;
 			repositoryName = json.SelectToken("github.sync.repository-name")?.Value<string>() ?? repositoryName;
 			issueURL = json.SelectToken("github.sync.issue-url")?.Value<string>() ?? issueURL;

@@ -2,9 +2,6 @@
     # Github personal access token - https://github.com/settings/tokens - Requires 'read:org' permission (and maybe 'read:user'?) to fetch sponsors.
     token: "<add-token-here>"
 
-    # Minimum amount of time in minutes between refreshing sponsor list from the API.
-    sponsor-cache-time: 15
-
     # Amount of time in minutes between re-checking users with registered roles, recommended to keep very high. Set to 0 to disable alltogether.
     auto-prune-time: 360
 

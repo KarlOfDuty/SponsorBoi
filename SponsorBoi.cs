@@ -35,10 +35,6 @@ namespace SponsorBoi
 			{
 				Initialize();
 
-				List<Github.Sponsor> sponsors = await Github.GetCachedSponsors();
-				List<Github.Issue> issues = await Github.GetIssues();
-				Github.Account githubAccount = await Github.GetUserByUsername("KarlofDuty");
-
 				// Block this task until the program is closed.
 				await Task.Delay(-1);
 			}

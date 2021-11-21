@@ -54,7 +54,7 @@ namespace SponsorBoi
 				return;
 			}
 
-			List<Github.Sponsor> sponsors = await Github.GetCachedSponsors();
+			List<Github.Sponsor> sponsors = await Github.GetSponsors();
 			List<Database.SponsorEntry> linkedUsers = Database.GetAllSponsors();
 
 			foreach (Database.SponsorEntry linkedUser in linkedUsers)

@@ -34,9 +34,6 @@ namespace SponsorBoi
 		private static ICompiledQuery<IEnumerable<Sponsor>> sponsorQuery = null;
 		private static ICompiledQuery<IEnumerable<Issue>> issueQuery = null;
 
-		private static List<Sponsor> sponsorCache = null;
-		private static DateTime cacheAge = DateTime.MinValue;
-
 		public static void Initialize()
 		{
 			sponsorQuery = new Query() // Needs 'read:org' permission (And maybe 'read:user'?) 
@@ -74,20 +71,10 @@ namespace SponsorBoi
 			connection = new Connection(productInformation, Config.githubToken);
 		}
 
-		public static async Task<List<Sponsor>> GetCachedSponsors()
-		{
-			if (cacheAge.AddMinutes(Config.sponsorCacheTimeout) < DateTime.Now && sponsorCache != null)
-			{
-				return sponsorCache;
-			}
-			return await GetSponsors();
-		}
-
 		public static async Task<List<Sponsor>> GetSponsors()
 		{
 			try
 			{
-				cacheAge = DateTime.Now;
 				return (await connection?.Run(sponsorQuery))?.ToList();
 			} 
 			catch (HttpRequestException e)

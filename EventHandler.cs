@@ -55,7 +55,7 @@ namespace SponsorBoi
 			if (!Database.TryGetSponsor(e.Member.Id, out Database.SponsorEntry sponsorEntry)) return;
 
 			// Check if user is active sponsor
-			List <Github.Sponsor> sponsors = await Github.GetCachedSponsors();
+			List <Github.Sponsor> sponsors = await Github.GetSponsors();
 			Github.Sponsor sponsor = sponsors.FirstOrDefault(s => s.sponsor.id == sponsorEntry.githubID);
 			if (sponsor == null) return;
 
