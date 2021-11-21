@@ -81,7 +81,7 @@ namespace SponsorBoi.Commands
 				}
 			}
 
-			if (!Database.TryGetSponsor(githubAccount.id, out Database.SponsorEntry existingSponsor))
+			if (Database.TryGetSponsor(githubAccount.id, out Database.SponsorEntry existingSponsor))
 			{
 				await command.RespondAsync(new DiscordEmbedBuilder
 				{
