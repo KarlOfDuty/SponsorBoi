@@ -9,13 +9,15 @@
     <Product>SponsorBoi</Product>
     <Description>A Discord bot which syncs Github Sponsors to Discord.</Description>
     <Authors>KarlofDuty</Authors>
-    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
+    <PackageVersion>1.0.0-A</PackageVersion>
   </PropertyGroup>
     
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.1.0" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0" />
-    <PackageReference Include="MySql.Data" Version="8.0.27" />
+    <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01109" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01109" />
+    <PackageReference Include="MySql.Data" Version="8.0.28" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Octokit.GraphQL" Version="0.1.8-beta" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
