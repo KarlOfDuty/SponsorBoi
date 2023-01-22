@@ -118,6 +118,7 @@ namespace SponsorBoi
 			commands.RegisterCommands<LinkCommand>();
 			commands.RegisterCommands<RecheckCommand>();
 			commands.RegisterCommands<UnlinkCommand>();
+			commands.RegisterCommands<CreateSyncButtonCommand>();
 
 			Logger.Log("Hooking events...");
 			discordClient.Ready += EventHandler.OnReady;
