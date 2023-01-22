@@ -11,12 +11,12 @@ The user is then granted a role according to your config and the bot will re-che
 
 | Command | Description |
 |--- |---- |
-| `link` | Links your Discord account to your Github account. |
-| `link <discord user> <github user>` | Manually links a Discord account to a Github account. |
-| `unlink` | Unlinks your Github account. |
-| `unlink <discord user>` | Unlinks a user's Github account. |
-| `recheck` | Forces a recheck of all linked users' sponsor status. |
-| `recheck <discord user>` | Forces a recheck of a specific user's sponsor status. |
+| `/link` | Links your Discord account to your Github account. |
+| `/adminlink <discord user> <github user>` | Manually links a Discord account to a Github account. |
+| `/unlink` | Unlinks your Github account. |
+| `/adminunlink <discord user>` | Unlinks a user's Github account. |
+| `/recheck` | Forces a recheck of all linked users' sponsor status. |
+| `/recheck <discord user>` | Forces a recheck of a specific user's sponsor status. |
 
 ## Setup
 
@@ -36,24 +36,25 @@ github:
     # Github personal access token - https://github.com/settings/tokens - Requires 'read:org' permission (and maybe 'read:user'?) to fetch sponsors.
     token: "<add-token-here>"
 
-    # Amount of time in minutes between re-checking users with registered roles, recommended to keep high.
+    # Amount of time in minutes between re-checking users with registered roles, recommended to keep high. Set to 0 to disable alltogether.
     auto-prune-time: 120
 
     sync:
         # The name of the repository to check for verification requests, must be owned by the same user as the token above.
         repository-name: "MyRepo"
 
-        # The user is shown this url when they run the sync command.
-        # It is recommended that you set up an issue template with instructions for the user and link directly to it here.
-        # You can enable issue templates in your repository settings under 'Options->Issues->Set up Templates'.
-        issue-url: "https://github.com/MyUsername/MyRepo/issues/new/choose"
+        # The owner of the repository, most likely your github username
+        owner-name: "MyUsername"
+
+        # The issue title (all characters must be allowed in a URL)
+        issue-title: "Automated Discord Link"
+
+        # Optional: Set a label (all characters must be allowed in a URL)
+        issue-label: ""
 
 bot:
     # Bot token.
     token: "<add-token-here>"
-
-    # Command prefix. I recommend setting it to something like "+sponsor " if you have other bots that might need the single character prefix.
-    prefix: "+"
 
     # Decides which messages are shown in console
     # Possible values are: Critical, Error, Warning, Information, Debug.
@@ -75,32 +76,6 @@ bot:
     # Your Discord server's ID
     server-id: 000000000000000000
 
-    # Set up which roles are allowed to use different commands.
-    # Example 1:
-    #   self: [ 000000000000000000, 111111111111111111 ]
-    # Example 2:
-    #   self:
-    #     - 000000000000000000
-    #     - 222222222222222222
-    # Do not give non-staff roles access to execute commands on other users.
-    permissions:
-        # Saves a discord user's Github account in the database.
-        link:
-            self:
-                - 000000000000000000
-                - 111111111111111111
-            other:
-                - 222222222222222222
-        # Removes a user's linked Github account.
-        unlink:
-            self:
-                - 000000000000000000
-            other:
-                - 222222222222222222
-        # Manually rechecks a user's sponsor status
-        recheck:
-            - 222222222222222222
-
 database:
     # Address and port of the mysql server.
     address: "127.0.0.1"
@@ -110,5 +85,4 @@ database:
     # Username and password for authentication.
     user: "username"
     password: "password"
-
 ```
