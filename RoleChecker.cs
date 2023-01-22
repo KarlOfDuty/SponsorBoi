@@ -1,5 +1,4 @@
 ﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
@@ -21,13 +20,13 @@ namespace SponsorBoi
 				{
 					try
 					{
-						Logger.Log(LogID.Discord, "Started periodic check of sponsors...");
+						Logger.Log("Started periodic check of sponsors...");
 						await RunSponsorCheck();
-						Logger.Log(LogID.Discord, "Periodic sponsor check finished.");
+						Logger.Log("Periodic sponsor check finished.");
 					}
 					catch (Exception e)
 					{
-						Logger.Error(LogID.Discord, "Periodic sponsor check failed:\n" + e);
+						Logger.Error("Periodic sponsor check failed:\n" + e);
 					}
 					await Task.Delay(Config.autoPruneTime * 60 * 1000);
 				}
@@ -43,7 +42,7 @@ namespace SponsorBoi
 			}
 			catch (Exception)
 			{
-				Logger.Error(LogID.Discord, "Error could not find Discord server with the configured id '" + Config.serverID + "'");
+				Logger.Error("Error could not find Discord server with the configured id '" + Config.serverID + "'");
 				return;
 			}
 
@@ -60,11 +59,11 @@ namespace SponsorBoi
 				}
 				catch (Exception)
 				{
-					Logger.Warn(LogID.Discord, "Could not find user with id '" + linkedUser.discordID + "' on the server.");
+					Logger.Warn("Could not find user with id '" + linkedUser.discordID + "' on the server.");
 					continue;
 				}
 
-				Logger.Log(LogID.Discord, "Checking member: " + Utils.FullName(member));
+				Logger.Log("Checking member: " + Utils.FullName(member));
 
 				ulong sponsorTierRoleID = 0;
 				Github.Sponsor sponsor = sponsors.FirstOrDefault(x => x.sponsor.id == linkedUser.githubID);
@@ -86,12 +85,12 @@ namespace SponsorBoi
 				try
 				{
 					DiscordRole roleToGive = member.Guild.GetRole(sponsorTierRoleID);
-					Logger.Log(LogID.Discord, "Giving role '" + roleToGive.Name + "' to " + Utils.FullName(member));
+					Logger.Log("Giving role '" + roleToGive.Name + "' to " + Utils.FullName(member));
 					await member.GrantRoleAsync(roleToGive);
 				}
 				catch (Exception e)
 				{
-					Logger.Log(LogID.Discord, "Error giving role <@" + sponsorTierRoleID + "> to user " + Utils.FullName(member) + ":\n" + e);
+					Logger.Log("Error giving role <@" + sponsorTierRoleID + "> to user " + Utils.FullName(member) + ":\n" + e);
 				}
 			}
 
@@ -104,13 +103,13 @@ namespace SponsorBoi
 				try
 				{
 					DiscordRole roleToRemove = member.Guild.GetRole(removeRoleID);
-					Logger.Log(LogID.Discord, "Revoking role '" + roleToRemove.Name + "' from " + Utils.FullName(member));
+					Logger.Log("Revoking role '" + roleToRemove.Name + "' from " + Utils.FullName(member));
 					await member.RevokeRoleAsync(roleToRemove);
 					await Task.Delay(1000);
 				}
 				catch (Exception e)
 				{
-					Logger.Log(LogID.Discord, "Error removing role <@" + removeRoleID + "> from user " + Utils.FullName(member) + ":\n" + e);
+					Logger.Log("Error removing role <@" + removeRoleID + "> from user " + Utils.FullName(member) + ":\n" + e);
 				}
 			}
 		}

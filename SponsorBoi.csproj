@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
     <StartupObject>SponsorBoi.SponsorBoi</StartupObject>
     <Company>KarlofDuty</Company>
@@ -12,15 +12,17 @@
     <AssemblyVersion>1.0.0.1</AssemblyVersion>
     <FileVersion>1.0.0.1</FileVersion>
     <PackageVersion>1.0.0-A</PackageVersion>
+    <LangVersion>latestmajor</LangVersion>
   </PropertyGroup>
     
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01109" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01109" />
-    <PackageReference Include="MySql.Data" Version="8.0.28" />
+    <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-00009" />
+    <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-00009" />
+    <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-00009" />
+    <PackageReference Include="MySql.Data" Version="8.0.32" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <PackageReference Include="Octokit.GraphQL" Version="0.1.8-beta" />
-    <PackageReference Include="YamlDotNet" Version="11.2.1" />
+    <PackageReference Include="Octokit.GraphQL" Version="0.2.0-beta" />
+    <PackageReference Include="YamlDotNet" Version="12.3.1" />
   </ItemGroup>
 
   <ItemGroup>

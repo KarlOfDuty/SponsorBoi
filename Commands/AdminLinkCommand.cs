@@ -7,40 +7,41 @@ using DSharpPlus.SlashCommands.Attributes;
 
 namespace SponsorBoi.Commands
 {
-	public class LinkCommand : ApplicationCommandModule
+	public class AdminLinkCommand : ApplicationCommandModule
 	{
 		[SlashRequireGuild]
-		[SlashCommand("link", "Link your Github account for Sponsor syncing")]
-		private async Task ExecuteCommand(InteractionContext command)
+		[SlashCommand("adminlink", "Links a user to a Github account")]
+		private async Task ExecuteCommand(InteractionContext command,
+			[Option("DiscordUser", "Discord user to link.")] DiscordUser targetUser,
+			[Option("GithubName", "Github user to link.")] string githubUsername)
 		{
-			if (Database.TryGetSponsor(command.Member.Id, out Database.SponsorEntry _))
+			if (targetUser.TryGetMember(command.Guild, out DiscordMember member))
 			{
 				await command.CreateResponseAsync(new DiscordEmbedBuilder
 				{
 					Color = DiscordColor.Red,
-					Description = "The Discord account " + command.Member.Mention + " is already linked to a Github account."
+					Description = "The Discord account " + member.Mention + " doesn't seem to be a member of this server."
 				}, true);
 				return;
 			}
 
-			Github.Account githubAccount = null;
-			List<Github.Issue> issues = await Github.GetIssues();
-			foreach (Github.Issue issue in issues)
+			if (Database.TryGetSponsor(member.Id, out Database.SponsorEntry _))
 			{
-				if (issue.description.Contains(command.Member.Id.ToString()))
+				await command.CreateResponseAsync(new DiscordEmbedBuilder
 				{
-					githubAccount = issue.author;
-					break;
-				}
+					Color = DiscordColor.Red,
+					Description = "The Discord account " + member.Mention + " is already linked to a Github account."
+				}, true);
+				return;
 			}
 
+			Github.Account githubAccount = await Github.GetUserByUsername(githubUsername);
 			if (githubAccount == null)
 			{
 				await command.CreateResponseAsync(new DiscordEmbedBuilder
 				{
-					Color = DiscordColor.Cyan,
-					Description = "Click [here](" + Utils.GetIssueURL("Discord ID: " + command.Member.Id) + ")"
-								  + " and click submit in order to verify your account. Run this command again when done.",
+					Color = DiscordColor.Red,
+					Description = "Could not find Github user '" + githubUsername + "'."
 				}, true);
 				return;
 			}
@@ -55,7 +56,7 @@ namespace SponsorBoi.Commands
 				return;
 			}
 
-			if (!Database.TryAddSponsor(new Database.SponsorEntry { discordID = command.Member.Id, githubID = githubAccount.id }))
+			if (!Database.TryAddSponsor(new Database.SponsorEntry { discordID = member.Id, githubID = githubAccount.id }))
 			{
 				await command.CreateResponseAsync(new DiscordEmbedBuilder
 				{
@@ -68,8 +69,7 @@ namespace SponsorBoi.Commands
 			await command.CreateResponseAsync(new DiscordEmbedBuilder
 			{
 				Color = DiscordColor.Green,
-				Description = "The Github account '" + githubAccount.name + "' is now linked to " + command.Member.Mention + "\n\n"
-							  + "You may now close or delete the Github issue."
+				Description = "The Github account '" + githubAccount.name + "' is now linked to " + member.Mention
 			}, true);
 
 			List<Github.Sponsor> sponsors = await Github.GetSponsors();
@@ -81,7 +81,7 @@ namespace SponsorBoi.Commands
 				sponsorTierRoleID = Config.tierRoles.GetValueOrDefault(sponsor.dollarAmount);
 			}
 
-			await RoleChecker.SyncRoles(command.Member, sponsorTierRoleID);
+			await RoleChecker.SyncRoles(member, sponsorTierRoleID);
 		}
 	}
 }

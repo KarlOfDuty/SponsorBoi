@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Exceptions;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
+using DSharpPlus.SlashCommands.EventArgs;
 
 namespace SponsorBoi
 {
@@ -15,7 +16,7 @@ namespace SponsorBoi
 	{
 		public static Task OnReady(DiscordClient client, ReadyEventArgs e)
 		{
-			Logger.Log(LogID.Discord, "Client is ready to process events.");
+			Logger.Log("Client is ready to process events.");
 
 			// Checking activity type
 			if (!Enum.TryParse(Config.presenceType, true, out ActivityType activityType))
@@ -30,20 +31,20 @@ namespace SponsorBoi
 
 		public static Task OnGuildAvailable(DiscordClient client, GuildCreateEventArgs e)
 		{
-			Logger.Log(LogID.Discord, "Guild available: " + e.Guild.Name);
+			Logger.Log("Guild available: " + e.Guild.Name);
 
 			IReadOnlyDictionary<ulong, DiscordRole> roles = e.Guild.Roles;
 
 			foreach ((ulong roleID, DiscordRole role) in roles)
 			{
-				Logger.Log(LogID.Discord, role.Name.PadRight(40, '.') + roleID);
+				Logger.Log(role.Name.PadRight(40, '.') + roleID);
 			}
 			return Task.CompletedTask;
 		}
 
 		public static Task OnClientError(DiscordClient client, ClientErrorEventArgs e)
 		{
-			Logger.Error(LogID.Discord, "Exception occured:\n" + e.Exception);
+			Logger.Error("Exception occured:\n" + e.Exception);
 			return Task.CompletedTask;
 		}
 
@@ -64,63 +65,57 @@ namespace SponsorBoi
 
 			// Assign role
 			DiscordRole role = e.Guild.GetRole(roleID);
-			Logger.Log(LogID.Discord, Utils.FullName(e.Member) + " (" + e.Member.Id + ") were given back the role '" + role.Name + "' on rejoin. ");
+			Logger.Log(Utils.FullName(e.Member) + " (" + e.Member.Id + ") were given back the role '" + role.Name + "' on rejoin. ");
 			await e.Member.GrantRoleAsync(role);
 		}
 
-		public static Task OnCommandError(CommandsNextExtension commandSystem, CommandErrorEventArgs e)
+		internal static async Task OnCommandError(SlashCommandsExtension commandSystem, SlashCommandErrorEventArgs e)
 		{
 			switch (e.Exception)
 			{
-				case CommandNotFoundException _:
-					return Task.CompletedTask;
-				case ChecksFailedException _:
+				case SlashExecutionChecksFailedException checksFailedException:
 				{
-					foreach (CheckBaseAttribute attr in ((ChecksFailedException)e.Exception).FailedChecks)
+					foreach (SlashCheckBaseAttribute attr in checksFailedException.FailedChecks)
 					{
-						DiscordEmbed error = new DiscordEmbedBuilder
+						await e.Context.Channel.SendMessageAsync(new DiscordEmbedBuilder
 						{
 							Color = DiscordColor.Red,
 							Description = ParseFailedCheck(attr)
-						};
-						e.Context?.Channel?.SendMessageAsync(error);
+						});
 					}
-					return Task.CompletedTask;
+					return;
 				}
+
+				case BadRequestException ex:
+					Logger.Error("Command exception occured:\n" + e.Exception);
+					Logger.Error("JSON Message: " + ex.JsonMessage);
+					return;
 
 				default:
 				{
-					Logger.Error(LogID.Discord, "Exception occured: \n" + e.Exception);
-					DiscordEmbed error = new DiscordEmbedBuilder
+					Logger.Error("Exception occured: " + e.Exception.GetType() + ": " + e.Exception);
+					await e.Context.Channel.SendMessageAsync(new DiscordEmbedBuilder
 					{
 						Color = DiscordColor.Red,
 						Description = "Internal error occured, please report this to the developer."
-					};
-					e.Context?.Channel?.SendMessageAsync(error);
-					return Task.CompletedTask;
+					});
+					return;
 				}
 			}
 		}
 
-		private static string ParseFailedCheck(CheckBaseAttribute attr)
+		private static string ParseFailedCheck(SlashCheckBaseAttribute attr)
 		{
-			switch (attr)
+			return attr switch
 			{
-				case CooldownAttribute _:
-					return "You cannot use do that so often!";
-				case RequireOwnerAttribute _:
-					return "Only the server owner can use that command!";
-				case RequirePermissionsAttribute _:
-					return "You don't have permission to do that!";
-				case RequireRolesAttribute _:
-					return "You do not have a required role!";
-				case RequireUserPermissionsAttribute _:
-					return "You don't have permission to do that!";
-				case RequireNsfwAttribute _:
-					return "This command can only be used in an NSFW channel!";
-				default:
-					return "Unknown Discord API error occured, please try again later.";
-			}
+				SlashRequireDirectMessageAttribute => "This command can only be used in direct messages!",
+				SlashRequireOwnerAttribute => "Only the server owner can use that command!",
+				SlashRequirePermissionsAttribute => "You don't have permission to do that!",
+				SlashRequireBotPermissionsAttribute => "The bot doesn't have the required permissions to do that!",
+				SlashRequireUserPermissionsAttribute => "You don't have permission to do that!",
+				SlashRequireGuildAttribute => "This command has to be used in a Discord server!",
+				_ => "Unknown Discord API error occured, please try again later."
+			};
 		}
 	}
 }

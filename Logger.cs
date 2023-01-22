@@ -1,87 +1,68 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
+using System.Reflection;
 
-namespace SponsorBoi
+namespace SponsorBoi;
+
+public static class Logger
 {
-	public enum LogID
+	public static void Debug(string message)
 	{
-		General,
-		Config,
-		Github,
-		Command,
-		Discord
-	};
+		try
+		{
+			SponsorBoi.discordClient.Logger.Log(LogLevel.Debug, new EventId(420, Assembly.GetEntryAssembly()?.GetName().Name), message);
+		}
+		catch (NullReferenceException)
+		{
+			Console.WriteLine("[DEBUG] " + message);
+		}
+	}
 
-	public static class Logger
+	public static void Log(string message)
 	{
-		private static Dictionary<LogID, EventId> eventIDs = new Dictionary<LogID, EventId>
+		try
 		{
-			{ LogID.General, new EventId(500, "General") },
-			{ LogID.Config,  new EventId(501, "Config")  },
-			{ LogID.Github,  new EventId(502, "Github")  },
-			{ LogID.Command, new EventId(503, "Command") },
-			{ LogID.Discord, new EventId(504, "Discord") },
-		};
-
-		public static void Debug(LogID logID, string Message)
-		{
-			try
-			{
-				SponsorBoi.discordClient.Logger.Log(LogLevel.Debug, eventIDs[logID], Message);
-			}
-			catch (NullReferenceException)
-			{
-				Console.WriteLine("[DEBUG] " + Message);
-			}
+			SponsorBoi.discordClient.Logger.Log(LogLevel.Information, new EventId(420, Assembly.GetEntryAssembly()?.GetName().Name), message);
 		}
-
-		public static void Log(LogID logID, string Message)
+		catch (NullReferenceException)
 		{
-			try
-			{
-				SponsorBoi.discordClient.Logger.Log(LogLevel.Information, eventIDs[logID], Message);
-			}
-			catch (NullReferenceException)
-			{
-				Console.WriteLine("[INFO] " + Message);
-			}
+			Console.WriteLine("[INFO] " + message);
 		}
+	}
 
-		public static void Warn(LogID logID, string Message)
+	public static void Warn(string message)
+	{
+		try
 		{
-			try
-			{
-				SponsorBoi.discordClient.Logger.Log(LogLevel.Warning, eventIDs[logID], Message);
-			}
-			catch (NullReferenceException)
-			{
-				Console.WriteLine("[WARNING] " + Message);
-			}
+			SponsorBoi.discordClient.Logger.Log(LogLevel.Warning, new EventId(420, Assembly.GetEntryAssembly()?.GetName().Name), message);
 		}
-
-		public static void Error(LogID logID, string Message)
+		catch (NullReferenceException)
 		{
-			try
-			{
-				SponsorBoi.discordClient.Logger.Log(LogLevel.Error, eventIDs[logID], Message);
-			}
-			catch (NullReferenceException)
-			{
-				Console.WriteLine("[ERROR] " + Message);
-			}
+			Console.WriteLine("[WARNING] " + message);
 		}
+	}
 
-		public static void Fatal(LogID logID, string Message)
+	public static void Error(string message)
+	{
+		try
 		{
-			try
-			{
-				SponsorBoi.discordClient.Logger.Log(LogLevel.Critical, eventIDs[logID], Message);
-			}
-			catch (NullReferenceException)
-			{
-				Console.WriteLine("[CRITICAL] " + Message);
-			}
+			SponsorBoi.discordClient.Logger.Log(LogLevel.Error, new EventId(420, Assembly.GetEntryAssembly()?.GetName().Name), message);
+		}
+		catch (NullReferenceException)
+		{
+			Console.WriteLine("[ERROR] " + message);
+		}
+	}
+
+	public static void Fatal(string message)
+	{
+		try
+		{
+			SponsorBoi.discordClient.Logger.Log(LogLevel.Critical, new EventId(420, Assembly.GetEntryAssembly()?.GetName().Name), message);
+		}
+		catch (NullReferenceException)
+		{
+			Console.WriteLine("[CRITICAL] " + message);
 		}
 	}
 }

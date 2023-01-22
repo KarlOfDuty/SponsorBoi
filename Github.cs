@@ -36,7 +36,7 @@ namespace SponsorBoi
 
 		public static void Initialize()
 		{
-			sponsorQuery = new Query() // Needs 'read:org' permission (And maybe 'read:user'?) 
+			sponsorQuery = new Query() // Needs 'read:org' permission (And maybe 'read:user'?)
 				.Viewer
 				.SponsorshipsAsMaintainer()
 				.AllPages().Select(x => new Sponsor
@@ -76,7 +76,7 @@ namespace SponsorBoi
 			try
 			{
 				return (await connection?.Run(sponsorQuery))?.ToList();
-			} 
+			}
 			catch (HttpRequestException e)
 			{
 				LogException(new AggregateException(e));
@@ -180,7 +180,7 @@ namespace SponsorBoi
 				switch (ex)
 				{
 					case Octokit.GraphQL.Core.Deserializers.ResponseDeserializerException:
-						Logger.Error(LogID.Github, "Error occured when reading Github response:\n" + ex);
+						Logger.Error("Error occured when reading Github response:\n" + ex);
 						return true;
 					case HttpRequestException except:
 						LogHTTPRequestException(except);
@@ -196,14 +196,14 @@ namespace SponsorBoi
 			switch (e.StatusCode)
 			{
 				case System.Net.HttpStatusCode.BadGateway:
-					Logger.Error(LogID.Github, "Could not connect to Github API (Bad Gateway)");
+					Logger.Error("Could not connect to Github API (Bad Gateway)");
 					break;
 				case System.Net.HttpStatusCode.Unauthorized:
 				case System.Net.HttpStatusCode.Forbidden:
-					Logger.Error(LogID.Github, "Github refused request, make sure your personal access token is valid and has the right permissions.");
+					Logger.Error("Github refused request, make sure your personal access token is valid and has the right permissions.");
 					break;
 				default:
-					Logger.Error(LogID.Github, "Unknown error occured requesting from the Github API: " + e.Message);
+					Logger.Error("Unknown error occured requesting from the Github API: " + e.Message);
 					break;
 			}
 		}

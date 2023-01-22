@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
-using DSharpPlus.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SponsorBoi
 {
-	public class Utils
+	public static class Utils
 	{
 		public static string Minify(string input)
 		{
@@ -26,81 +21,39 @@ namespace SponsorBoi
 			return args.Trim().Replace("<@!", "").Replace("<@", "").Replace(">", "").Split();
 		}
 
-		public static async Task<bool> VerifyPermission(CommandContext command, string permission)
+		public static bool TryGetMember(this DiscordUser user, DiscordGuild guild, out DiscordMember member)
 		{
 			try
 			{
-				// Check if the user has permission to use this command.
-				if (!Config.HasPermission(command.Member, permission))
-				{
-					await command.RespondAsync(new DiscordEmbedBuilder
-					{
-						Color = DiscordColor.Red,
-						Description = "You do not have permission to use this command."
-					});
-					return false;
-				}
-
-				return true;
+				member = guild.GetMemberAsync(user.Id).GetAwaiter().GetResult();
+				return member != null;
 			}
 			catch (Exception)
 			{
-				await command.RespondAsync(new DiscordEmbedBuilder
-				{
-					Color = DiscordColor.Red,
-					Description = "Error occured when checking permissions, please report this to the developer."
-				});
+				member = null;
 				return false;
 			}
 		}
 
-		public static async Task<bool> VerifySelfOtherPermission(CommandContext command, DiscordUser user, string permission)
+		public static string FullName(this DiscordUser user)
+	    {
+     		return user.Username + "#" + user.Discriminator;
+	    }
+
+		public static string GetIssueURL(string messageContents)
 		{
-			try
+			string url = "https://github.com/" + Config.ownerName + "/" + Config.repositoryName
+						 + "/issues/new?body=" + messageContents.Replace(' ', '+');
+			if (!string.IsNullOrWhiteSpace(Config.issueTitle))
 			{
-				string fullPermission = permission;
-
-				if (user.Id == command.Member.Id)
-				{
-					fullPermission += ".self";
-				}
-				else
-				{
-					fullPermission += ".other";
-				}
-
-				// Check if the user has permission to use this command.
-				if (!Config.HasPermission(command.Member, fullPermission))
-				{
-					await command.RespondAsync(new DiscordEmbedBuilder
-					{
-						Color = DiscordColor.Red,
-						Description = "You do not have permission to use this command."
-					});
-					return false;
-				}
-
-				return true;
+				url += "&title=" + Config.issueTitle.Replace(' ', '+');
 			}
-			catch (Exception)
+
+			if (!string.IsNullOrWhiteSpace(Config.issueLabel))
 			{
-				await command.RespondAsync(new DiscordEmbedBuilder
-				{
-					Color = DiscordColor.Red,
-					Description = "Error occured when checking permissions, please report this to the developer."
-				});
-				return false;
+				url += "&label=" + Config.issueLabel.Replace(' ', '+');
 			}
-		}
-
-		public static string FullName(DiscordUser user)
-		{
-			return user.Username + "#" + user.Discriminator;
-		}
-
-		public static string FullName(DiscordMember user)
-		{
-			return user.Username + "#" + user.Discriminator;
+			return url;
 		}
 	}
 }

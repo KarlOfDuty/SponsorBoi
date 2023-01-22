@@ -1,52 +1,57 @@
-﻿using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
+﻿using DSharpPlus.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace SponsorBoi.Commands
 {
-	public class RecheckCommand : BaseCommandModule
+	public class RecheckCommand : ApplicationCommandModule
 	{
-		[Command("recheck")]
-		[Cooldown(1, 5, CooldownBucketType.User)]
-		public async Task OnExecute(CommandContext command)
+		[SlashRequireGuild]
+		[SlashCommand("recheck", "Recheck one or all users")]
+		public async Task OnExecute(InteractionContext command, [Option("User", "User to recheck.")] DiscordUser user = null)
 		{
-			if (!await Utils.VerifyPermission(command, "recheck")) return;
-
-			await command.RespondAsync(new DiscordEmbedBuilder
+			if (user == null)
 			{
-				Color = DiscordColor.Green,
-				Description = "Running recheck on all sponsors."
-			});
-
-			Logger.Log(LogID.Discord, "Started manually triggered check of sponsors...");
-			await RoleChecker.RunSponsorCheck();
-			Logger.Log(LogID.Discord, "Manually triggered sponsor check finished.");
-		}
-
-		[Command("recheck")]
-		[Cooldown(1, 5, CooldownBucketType.User)]
-		public async Task OnExecute(CommandContext command, DiscordMember member)
-		{
-			if (!await Utils.VerifyPermission(command, "recheck")) return;
-
-			if (!Database.TryGetSponsor(member.Id, out Database.SponsorEntry sponsorEntry))
-			{
-				await command.RespondAsync(new DiscordEmbedBuilder
+				await command.CreateResponseAsync(new DiscordEmbedBuilder
 				{
-					Color = DiscordColor.Red,
-					Description = "That user isn't linked to a Github account."
-				});
+					Color = DiscordColor.Green,
+					Description = "Running recheck on all sponsors."
+				}, true);
+
+				Logger.Log("Started manually triggered check of sponsors...");
+				await RoleChecker.RunSponsorCheck();
+				Logger.Log("Manually triggered sponsor check finished.");
 				return;
 			}
 
-			await command.RespondAsync(new DiscordEmbedBuilder
+			if (!Database.TryGetSponsor(user.Id, out Database.SponsorEntry sponsorEntry))
+			{
+				await command.CreateResponseAsync(new DiscordEmbedBuilder
+				{
+					Color = DiscordColor.Red,
+					Description = "That user isn't linked to a Github account."
+				}, true);
+				return;
+			}
+
+			if (user.TryGetMember(command.Guild, out DiscordMember member))
+			{
+				await command.CreateResponseAsync(new DiscordEmbedBuilder
+				{
+					Color = DiscordColor.Red,
+					Description = "The Discord account " + member.Mention + " doesn't seem to be a member of this server."
+				}, true);
+				return;
+			}
+
+			await command.CreateResponseAsync(new DiscordEmbedBuilder
 			{
 				Color = DiscordColor.Green,
 				Description = "Running recheck on " + member.Mention + "."
-			});
+			}, true);
 
 			List<Github.Sponsor> sponsors = await Github.GetSponsors();
 
