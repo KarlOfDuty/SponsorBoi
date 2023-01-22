@@ -40,13 +40,15 @@ The user is then granted a role according to your config and the bot will re-che
 
 1. Set up a mysql server, create a user and empty database for the bot to use.
 
-2. [Create a new bot application](https://discordpy.readthedocs.io/en/latest/discord.html).
+2. Set up a Github repository where the bot will read issues for the automated linking.
 
-3. Download the bot for your operating system, either a [release version](https://github.com/KarlOfDuty/SponsorBoi/releases) or a [dev build](https://jenkins.karlofduty.com/blue/organizations/jenkins/SponsorBoi/activity).
+3. [Create a new bot application](https://discordpy.readthedocs.io/en/latest/discord.html).
 
-4. Run `./SponsorBoi` on Linux or `./SponsorBoi.exe` on Windows, the config is created for you.
+4. Download the bot for your operating system, either a [release version](https://github.com/KarlOfDuty/SponsorBoi/releases) or a [dev build](https://jenkins.karlofduty.com/blue/organizations/jenkins/SponsorBoi/activity).
 
-5. Set up the config (`config.yml`) to your specifications, there are instructions inside and also further down on this page. If you need more help either contact me in Discord or through an issue here.
+5. Run `./SponsorBoi` on Linux or `./SponsorBoi.exe` on Windows, the config is created for you.
+
+6. Set up the config (`config.yml`) to your specifications, there are instructions inside. If you need more help either contact me in Discord or through an issue here.
 
 ## Config:
 
