@@ -3,6 +3,9 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.Logging;
 using SponsorBoi.Commands;
@@ -100,6 +103,14 @@ namespace SponsorBoi
 
 			discordClient = new DiscordClient(cfg);
 
+			discordClient.UseInteractivity(new InteractivityConfiguration
+			{
+				AckPaginationButtons = true,
+				PaginationBehaviour = PaginationBehaviour.Ignore,
+				PaginationDeletion = PaginationDeletion.DeleteMessage,
+				Timeout = TimeSpan.FromMinutes(15)
+			});
+
 			Logger.Log("Registering commands...");
 			commands = discordClient.UseSlashCommands();
 			commands.RegisterCommands<AdminLinkCommand>();
@@ -114,6 +125,7 @@ namespace SponsorBoi
 			discordClient.ClientErrored += EventHandler.OnClientError;
 			discordClient.GuildMemberAdded += EventHandler.OnGuildMemberAdded;
 			commands.SlashCommandErrored += EventHandler.OnCommandError;
+			discordClient.ComponentInteractionCreated += EventHandler.OnComponentInteractionCreated;
 
 			Logger.Log("Connecting to Discord...");
 			await discordClient.ConnectAsync();

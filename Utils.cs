@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using DSharpPlus.Entities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -32,6 +34,26 @@ namespace SponsorBoi
 			{
 				member = null;
 				return false;
+			}
+		}
+
+		public static async void SyncUserRoles(DiscordGuild guild, DiscordUser user)
+		{
+			List<Github.Sponsor> sponsors = await Github.GetSponsors();
+			ulong sponsorTierRoleID = 0;
+
+			if (!Database.TryGetSponsor(user.Id, out Database.SponsorEntry sponsorEntry))
+				return;
+
+			Github.Sponsor sponsor = sponsors.FirstOrDefault(x => x.sponsor.id == sponsorEntry.githubID);
+			if (sponsor != null)
+			{
+				sponsorTierRoleID = Config.tierRoles.GetValueOrDefault(sponsor.dollarAmount);
+			}
+
+			if (user.TryGetMember(guild, out DiscordMember member))
+			{
+				await RoleChecker.SyncRoles(member, sponsorTierRoleID);
 			}
 		}
 
