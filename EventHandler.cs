@@ -115,18 +115,10 @@ public static class EventHandler
 					switch (e.Id)
 					{
 						case "sponsorboi_checkissuebutton":
-							await LinkCommand.OnButtonPressed(e.Interaction);
+							await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, (await LinkCommand.AttemptUserLink(e.Guild, e.User, false)).AsEphemeral());
 							return;
 						case "sponsorboi_standalonelinkbutton":
-							(DiscordEmbed embed, List<DiscordComponent> buttons) = await LinkCommand.PromptOrSyncUser(e.Guild, e.User);
-							DiscordInteractionResponseBuilder builder = new DiscordInteractionResponseBuilder().AddEmbed(embed);
-
-							if (buttons.Count != 0)
-							{
-								builder.AddComponents(buttons);
-							}
-
-							await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, builder.AsEphemeral());
+							await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, (await LinkCommand.AttemptUserLink(e.Guild, e.User, true)).AsEphemeral());
 							return;
 						case "right":
 							return;
