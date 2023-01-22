@@ -48,7 +48,7 @@ public class LinkCommand : ApplicationCommandModule
 				return response.AddEmbed(new DiscordEmbedBuilder
 				{
 					Color = DiscordColor.Cyan,
-					Title = "Sync Github Sponsors tier",
+					Title = "Link Github Sponsor",
 					Description = "You will verify the Github account is yours by posting your Discord ID in an issue.\n\n"
 								+ "Simply follow these steps and the rest is done automatically:\n"
 								+ "**1.** Press 'Submit Discord ID'\n"

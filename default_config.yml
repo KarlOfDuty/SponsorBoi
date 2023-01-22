@@ -12,10 +12,10 @@ github:
         # The owner of the repository, most likely your github username
         owner-name: "MyUsername"
 
-        # The issue title (all characters must be allowed in a URL)
+        # The issue title. All characters must be allowed in a URL (spaces are converted to + automatically).
         issue-title: "Automated Discord Link"
 
-        # Optional: Set a label (all characters must be allowed in a URL)
+        # Optional: Set an issue label which will be added to all issues opened by the bot. All characters must be allowed in a URL (spaces are converted to + automatically).
         issue-label: ""
 
 bot:
