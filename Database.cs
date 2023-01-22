@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using MySql.Data.MySqlClient;
+﻿using System.Collections.Generic;
+using MySqlConnector;
 
 namespace SponsorBoi
 {
@@ -42,7 +41,7 @@ namespace SponsorBoi
 		{
 			return new MySqlConnection(connectionString);
 		}
-		
+
 		public static bool TryAddSponsor(SponsorEntry sponsorEntry)
 		{
 			using MySqlConnection c = GetConnection();

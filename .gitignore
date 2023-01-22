@@ -352,3 +352,6 @@ MigrationBackup/
 config.yml
 
 .idea/
+
+Linux-x64/
+Windows-x64/
